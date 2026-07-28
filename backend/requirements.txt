@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+joblib
+pydantic
+pymongo
+python-dotenv
+firebase-admin
+requests

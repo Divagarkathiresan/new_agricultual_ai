@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "863058121508",
+    "project_id": "smart-agriculture-adviso-76368",
+    "storage_bucket": "smart-agriculture-adviso-76368.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863058121508:android:c76523cdc0b2b25ead19b1",
+        "android_client_info": {
+          "package_name": "com.sanjana.smartagricultureadvisory"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHe6touwktCxRaaQxDa_if6oesdlrdD_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
