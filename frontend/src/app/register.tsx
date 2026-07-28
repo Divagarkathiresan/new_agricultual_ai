@@ -12,23 +12,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { registerUser } from "./services/api";
+import { useToast } from "./components/toast";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleRegister = async () => {
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
 
     if (!trimmedName) {
-      alert("Please enter your name.");
+      toast.show("Please enter your name.", "error");
       return;
     }
 
     if (trimmedPhone.length !== 10) {
-      alert("Invalid phone number");
+      toast.show("Invalid phone number", "error");
       return;
     }
 
@@ -41,15 +43,15 @@ export default function RegisterScreen() {
       });
 
       if (result.success) {
-        alert(result.message || "Registration successful.");
+        toast.show(result.message || "Registration successful.", "success");
         router.replace("/login");
         return;
       }
 
-      alert(result.message || "Registration failed. Please try again.");
+      toast.show(result.message || "Registration failed. Please try again.", "error");
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "Unable to register. Please try again.");
+      toast.show(error?.message || "Unable to register. Please try again.", "error");
     } finally {
       setLoading(false);
     }

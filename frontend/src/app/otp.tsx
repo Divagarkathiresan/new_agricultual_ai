@@ -11,23 +11,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { verifyOtpWithBackend } from "./services/api";
+import { useToast } from "./components/toast";
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone?: string }>();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleVerify = async () => {
     const phoneNumber = Array.isArray(phone) ? phone[0] : phone;
     const trimmedOtp = otp.trim();
 
     if (!phoneNumber) {
-      alert("Phone number is missing. Please go back and request OTP again.");
+      toast.show("Phone number is missing. Please go back and request OTP again.", "error");
       return;
     }
 
     if (trimmedOtp.length !== 6) {
-      alert("Invalid OTP");
+      toast.show("Invalid OTP", "error");
       return;
     }
 
@@ -43,10 +45,10 @@ export default function OtpScreen() {
         return;
       }
 
-      alert(result.message || "OTP verification failed.");
+      toast.show(result.message || "OTP verification failed.", "error");
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "OTP verification failed.");
+      toast.show(error?.message || "OTP verification failed.", "error");
     } finally {
       setLoading(false);
     }

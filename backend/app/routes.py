@@ -131,7 +131,7 @@ def send_otp(data: SendOTPRequest):
 
     store_otp(data.phone, otp)
 
-    return {"message": "OTP sent successfully"}
+    return {"success": True, "message": "OTP sent successfully"}
 
 
 @router.post("/auth/verify-otp")

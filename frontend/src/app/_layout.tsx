@@ -4,6 +4,7 @@ import { useColorScheme } from "react-native";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./components/toast";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -11,18 +12,20 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <AuthProvider>
-      <ThemeProvider
-        value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-      >
-        <AnimatedSplashOverlay />
+    <ToastProvider>
+      <AuthProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <AnimatedSplashOverlay />
 
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        />
-      </ThemeProvider>
-    </AuthProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          />
+        </ThemeProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

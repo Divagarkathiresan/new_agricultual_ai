@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { predictCrop } from "./services/api";
+import { useToast } from "./components/toast";
 
 type FieldKey =
   | "nitrogen"
@@ -100,6 +101,7 @@ export default function PredictCropScreen() {
     useState<Record<FieldKey, string>>(defaultValues);
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const filledCount = useMemo(
     () => fields.filter((field) => values[field.key].trim()).length,
@@ -114,7 +116,7 @@ export default function PredictCropScreen() {
     const hasEmptyField = fields.some((field) => !values[field.key].trim());
 
     if (hasEmptyField) {
-      alert("Please fill all crop prediction inputs.");
+      toast.show("Please fill all crop prediction inputs.", "error");
       return;
     }
 
@@ -127,7 +129,7 @@ export default function PredictCropScreen() {
     );
 
     if (hasInvalidNumber) {
-      alert("Please enter valid numbers for all crop prediction inputs.");
+      toast.show("Please enter valid numbers for all crop prediction inputs.", "error");
       return;
     }
 
@@ -149,7 +151,7 @@ export default function PredictCropScreen() {
       setResult(response.recommended_crop);
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "Unable to predict crop. Please try again.");
+      toast.show(error?.message || "Unable to predict crop. Please try again.", "error");
     } finally {
       setLoading(false);
     }

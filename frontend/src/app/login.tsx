@@ -12,14 +12,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { sendOtpToPhone } from "./services/api";
+import { useToast } from "./components/toast";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleContinue = async () => {
     if (phone.length !== 10) {
-      alert("Invalid phone number");
+      toast.show("Invalid phone number", "error");
       return;
     }
 
@@ -33,10 +35,10 @@ export default function LoginScreen() {
         return;
       }
 
-      alert(result.message || "Unable to send OTP. Please try again.");
+      toast.show(result.message || "Unable to send OTP. Please try again.", "error");
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "Unable to send OTP. Please try again.");
+      toast.show(error?.message || "Unable to send OTP. Please try again.", "error");
     } finally {
       setLoading(false);
     }
