@@ -1,18 +1,18 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from "react";
-import { View, Text, Animated, StatusBar, Platform } from "react-native";
+import React, { createContext, useContext, useMemo, useRef, useState } from "react";
+import { Animated, Platform, StatusBar, Text, View } from "react-native";
 
 type ToastType = "success" | "error";
 
-interface ToastContextType {
+type ToastContextType = {
   show: (message: string, type?: ToastType) => void;
-}
+};
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
+export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-  const animatedValue = useRef(new Animated.Value(-120)).current;
-  const opacityValue = useRef(new Animated.Value(0)).current;
+  const animatedValue = useMemo(() => new Animated.Value(-120), []);
+  const opacityValue = useMemo(() => new Animated.Value(0), []);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const show = (message: string, type: ToastType = "success") => {
@@ -47,9 +47,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
           duration: 220,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        setToast(null);
-      });
+      ]).start(() => setToast(null));
     }, 3000);
   };
 
@@ -58,7 +56,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      {toast && (
+      {toast ? (
         <Animated.View
           style={[
             styles.container,
@@ -69,37 +67,23 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
             },
           ]}
         >
-          <View
-            style={[
-              styles.iconContainer,
-              toast.type === "success" ? styles.successIcon : styles.errorIcon,
-            ]}
-          >
-            <Text style={styles.iconText}>
-              {toast.type === "success" ? "✓" : "✕"}
-            </Text>
+          <View style={[styles.iconContainer, toast.type === "success" ? styles.successIcon : styles.errorIcon]}>
+            <Text style={styles.iconText}>{toast.type === "success" ? "✓" : "!"}</Text>
           </View>
-          <Text
-            style={[
-              styles.message,
-              toast.type === "error" && styles.errorMessage,
-            ]}
-          >
-            {toast.message}
-          </Text>
+          <Text style={[styles.message, toast.type === "error" && styles.errorMessage]}>{toast.message}</Text>
         </Animated.View>
-      )}
+      ) : null}
     </ToastContext.Provider>
   );
-};
+}
 
-export const useToast = () => {
+export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error("useToast must be used within ToastProvider");
   }
   return context;
-};
+}
 
 const styles = {
   container: {

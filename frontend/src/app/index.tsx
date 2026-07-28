@@ -1,5 +1,5 @@
-import LoginScreen from "./login";
+import { SplashScreen } from "@/screens/SplashScreen";
 
 export default function Index() {
-  return <LoginScreen />;
+  return <SplashScreen />;
 }
