@@ -57,8 +57,3 @@ export const createFarm = async (payload: FarmFormValues): Promise<Farm> => {
     status: "Active",
   };
 };
-
-export const listFarms = async (): Promise<Farm[]> => {
-  const { data } = await apiClient.get("/farms");
-  return Array.isArray(data) ? data : data?.farms ?? [];
-};

@@ -25,34 +25,12 @@ export function HomeScreen() {
     ]);
   }, []);
 
-  const requestHomeLocation = useCallback(async () => {
+  const requestHomeLocation = useCallback(() => {
     if (Platform.OS === "web") return;
 
-    try {
-      const Location = await import("expo-location");
-      const servicesEnabled = await Location.hasServicesEnabledAsync();
-
-      if (!servicesEnabled) {
-        showLocationAlert(
-          "Location services are turned off. Please enable location to show nearby weather and farm insights.",
-        );
-        return;
-      }
-
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.status !== "granted") {
-        showLocationAlert(
-          "Please allow location access so Smart Agriculture AI can personalize your farm dashboard.",
-        );
-        return;
-      }
-
-      await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-    } catch {
-      showLocationAlert(
-        "Location could not be started on this phone. Please enable location permissions and restart the app if needed.",
-      );
-    }
+    showLocationAlert(
+      "Please enable location access in phone settings so Smart Agriculture AI can personalize your farm dashboard.",
+    );
   }, [showLocationAlert]);
 
   useEffect(() => {

@@ -1,12 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { AppScreen } from "@/components/screen";
 import { AgricultureIllustration, AnimatedCard, AppButton, Card, SectionHeader } from "@/components/ui";
-import { listFarms } from "@/services/api";
 import { useAppStore } from "@/store/appStore";
 import { palette } from "@/theme/agriculture";
 import type { Farm } from "@/types/domain";
@@ -14,24 +12,16 @@ import type { Farm } from "@/types/domain";
 export function FarmListScreen() {
   const savedFarms = useAppStore((state) => state.farms);
   const [refreshing, setRefreshing] = useState(false);
-  const query = useQuery({
-    queryKey: ["farms"],
-    queryFn: listFarms,
-    retry: 1,
-  });
-
-  const farms = useMemo(() => (query.data?.length ? query.data : savedFarms), [query.data, savedFarms]);
 
   const refresh = async () => {
     setRefreshing(true);
-    await query.refetch();
     setRefreshing(false);
   };
 
   return (
     <AppScreen withNav scroll={false}>
       <SectionHeader title="Farm List" caption="Your saved farm profiles and crop plans." />
-      {farms.length === 0 ? (
+      {savedFarms.length === 0 ? (
         <View style={styles.empty}>
           <AgricultureIllustration variant={2} />
           <Text style={styles.emptyTitle}>No Farms Added Yet</Text>
@@ -40,9 +30,9 @@ export function FarmListScreen() {
         </View>
       ) : (
         <FlashList
-          data={farms}
+          data={savedFarms}
           keyExtractor={(item, index) => item._id || item.id || `${item.farm_name}-${index}`}
-          refreshControl={<RefreshControl refreshing={refreshing || query.isFetching} onRefresh={refresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
           contentContainerStyle={styles.listContent}
           renderItem={({ item, index }) => <FarmCard farm={item} index={index} />}
         />

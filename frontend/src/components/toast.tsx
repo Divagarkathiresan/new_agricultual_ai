@@ -58,6 +58,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {toast ? (
         <Animated.View
+          accessible={false}
+          accessibilityElementsHidden={true}
           style={[
             styles.container,
             {

@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
+import * as Location from "expo-location";
 
 import { AppScreen } from "@/components/screen";
 import { AppButton, Card, FieldInput, SectionHeader } from "@/components/ui";
@@ -62,31 +63,89 @@ export function AddFarmScreen() {
   }, [defaults, reset]);
 
   const requestLocation = useCallback(async () => {
-    try {
-      const Location = await import("expo-location");
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.status !== "granted") {
+  try {
+    setLocationDenied(false);
+
+    let latitude = 0;
+    let longitude = 0;
+
+    if (Platform.OS === "web") {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0,
+          }
+        );
+      });
+
+      latitude = position.coords.latitude;
+      longitude = position.coords.longitude;
+    } else {
+      // Request permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
         setLocationDenied(true);
         return;
       }
 
-      setLocationDenied(false);
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const location = {
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-      };
-      updateDraft({ location });
-      reset({ ...getValues(), location });
-    } catch {
-      setLocationDenied(true);
+      let location = null;
+
+      // Try 3 times because iOS may initially return kCLErrorLocationUnknown
+      for (let i = 0; i < 3; i++) {
+        try {
+          location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+
+          if (location) break;
+        } catch (err) {
+          console.log(`Location attempt ${i + 1} failed`, err);
+
+          if (i < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        }
+      }
+
+      // Fallback to last known location
+      if (!location) {
+        location = await Location.getLastKnownPositionAsync();
+      }
+
+      if (!location) {
+        throw new Error("Unable to determine location.");
+      }
+
+      latitude = location.coords.latitude;
+      longitude = location.coords.longitude;
     }
-  }, [getValues, reset, updateDraft]);
+
+    updateDraft({
+      location: {
+        latitude,
+        longitude,
+      },
+    });
+    } catch (error) {
+      console.log("Location Error:", error);
+
+      toast.show(
+        "Unable to determine your current location. Please move to an open area and try again.",
+        "error"
+      );
+    }
+  }, [updateDraft, toast]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      requestLocation().catch(() => setLocationDenied(true));
-    }, 0);
+  const timeout = setTimeout(() => {
+    requestLocation().catch(() => setLocationDenied(true));
+  }, 0);
+
     return () => clearTimeout(timeout);
   }, [requestLocation]);
 
