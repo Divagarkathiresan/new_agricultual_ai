@@ -15,9 +15,6 @@ class UserRegister(BaseModel):
     phone: str
     name: str
 
-class LoginRequest(BaseModel):
-    idToken: str
-
 class OTPDocument(BaseModel):
     phone: str
     otp: str

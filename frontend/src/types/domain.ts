@@ -54,4 +54,5 @@ export type AuthSession = {
   phone: string;
   name?: string;
   userId: string;
+  accessToken: string;
 };

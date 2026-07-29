@@ -25,7 +25,12 @@ export const sendOtpToPhone = async (payload: { phone: string }) => {
 
 export const verifyOtpWithBackend = async (payload: { phone: string; otp: string }) => {
   const { data } = await apiClient.post("/auth/verify-otp", payload);
-  return { success: Boolean(data?.success ?? true), message: data?.message || "OTP verified successfully" };
+  return {
+    success: Boolean(data?.success ?? true),
+    message: data?.message || "OTP verified successfully",
+    userId: data?.userId as string,
+    accessToken: data?.access_token as string,
+  };
 };
 
 export const predictCrop = async (payload: CropPredictionInput): Promise<CropPredictionResult> => {

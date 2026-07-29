@@ -94,8 +94,8 @@ export function RegisterScreen() {
   const onSubmit = async (values: RegisterForm) => {
     try {
       const phone = `+91${values.phone}`;
-      await registerUser({ uid: phone, name: values.name, phone });
-      toast.show("Registration successful. Verify your phone to continue.", "success");
+      await sendOtpToPhone({ phone });
+      toast.show("OTP sent. Verify your phone to create your account.", "success");
       router.push({ pathname: "/otp" as never, params: { phone, name: values.name } });
     } catch (error: any) {
       toast.show(error.message || "Unable to register.", "error");
@@ -152,8 +152,19 @@ export function OtpScreen() {
       return;
     }
     try {
-      await verifyOtpWithBackend({ phone: phoneNumber, otp });
-      await setAuthenticated({ phone: phoneNumber, userId: phoneNumber, name: displayName });
+      const login = await verifyOtpWithBackend({ phone: phoneNumber, otp });
+      if (!login.accessToken || !login.userId) {
+        throw new Error("Login succeeded but no access token was returned.");
+      }
+      await setAuthenticated({
+        phone: phoneNumber,
+        userId: login.userId,
+        name: displayName,
+        accessToken: login.accessToken,
+      });
+      if (displayName) {
+        await registerUser({ uid: login.userId, name: displayName, phone: phoneNumber });
+      }
       router.replace("/homepage" as never);
     } catch (error: any) {
       toast.show(error.message || "OTP verification failed.", "error");

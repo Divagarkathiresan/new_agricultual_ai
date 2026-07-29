@@ -3,25 +3,25 @@ import sys
 import random
 import requests
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from datetime import date, datetime
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent / "satellite"))
 from ndvi import generate_ndvi
 
-from firebase_admin import auth
-
 try:
     from .model_loader import model, encoder
-    from .schemas import CropInput, UserRegister, LoginRequest, SendOTPRequest, VerifyOTPRequest
+    from .schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from .farm_schema import Farm
+    from .auth import CurrentUser, create_access_token, get_current_user
     from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, save_satellite_report
     from .database import connection
 except ImportError:
     from model_loader import model, encoder
-    from schemas import CropInput, UserRegister, LoginRequest, SendOTPRequest, VerifyOTPRequest
+    from schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from farm_schema import Farm
+    from auth import CurrentUser, create_access_token, get_current_user
     from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, save_satellite_report
     from database import connection
 
@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 @router.post("/predict")
-def predict_crop(data: CropInput):
+def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_current_user)):
 
     sample = pd.DataFrame({
         "N": [data.N],
@@ -46,6 +46,7 @@ def predict_crop(data: CropInput):
     crop = encoder.inverse_transform(prediction)
 
     prediction_data = {
+        "user_id": current_user.user_id,
         "phone": data.phone,
         "N": data.N,
         "P": data.P,
@@ -65,7 +66,9 @@ def predict_crop(data: CropInput):
 
 
 @router.post("/register")
-def register(data: UserRegister):
+def register(data: UserRegister, current_user: CurrentUser = Depends(get_current_user)):
+    if data.uid != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You can only register your own user ID")
     user = {
         "uid": data.uid,
         "phone": data.phone,
@@ -74,40 +77,6 @@ def register(data: UserRegister):
     }
     register_user(user)
     return {"message": "User registered successfully"}
-
-
-@router.post("/auth/login")
-def login(data: LoginRequest):
-    try:
-        decoded_token = auth.verify_id_token(data.idToken)
-
-        uid = decoded_token["uid"]
-        phone = decoded_token.get("phone_number", "")
-
-        existing_user = connection.users_collection.find_one({"uid": uid})
-
-        if existing_user:
-            connection.users_collection.update_one(
-                {"uid": uid},
-                {"$set": {"last_login": datetime.utcnow()}}
-            )
-            return {
-                "success": True,
-                "message": "Login Successful",
-                "isNewUser": False,
-                "uid": uid
-            }
-
-        return {
-            "success": True,
-            "message": "Login Successful",
-            "isNewUser": True,
-            "uid": uid,
-            "phone": phone
-        }
-
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid Firebase Token")
 
 
 @router.post("/auth/send-otp")
@@ -145,21 +114,38 @@ def check_otp(data: VerifyOTPRequest):
     if result == "invalid":
         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    return {"success": True, "message": "OTP verified successfully"}
+    # OTP verification is the application's login step.
+    user = connection.users_collection.find_one({"phone": data.phone})
+    user_id = user.get("uid", data.phone) if user else data.phone
+    if user:
+        connection.users_collection.update_one(
+            {"_id": user["_id"]}, {"$set": {"last_login": datetime.utcnow()}}
+        )
+
+    return {
+        "success": True,
+        "message": "OTP verified successfully",
+        "userId": user_id,
+        "access_token": create_access_token(user_id),
+        "token_type": "bearer",
+    }
 
 
 @router.post("/farm")
-def add_farm(data: Farm):
+def add_farm(data: Farm, current_user: CurrentUser = Depends(get_current_user)):
     farm = data.model_dump()
+    farm["user_id"] = current_user.user_id
     result = create_farm(farm)
     return {"message": "Farm created successfully", "farm_id": str(result.inserted_id)}
 
 
 @router.post("/farm/{farm_id}/ndvi")
-def run_ndvi(farm_id: str):
+def run_ndvi(farm_id: str, current_user: CurrentUser = Depends(get_current_user)):
     farm = get_farm_by_id(farm_id)
     if not farm:
         raise HTTPException(status_code=404, detail="Farm not found")
+    if farm.get("user_id") != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You do not have access to this farm")
 
     latitude = farm["location"]["latitude"]
     longitude = farm["location"]["longitude"]

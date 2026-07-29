@@ -1,6 +1,9 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "axios";
+
+const AUTH_KEY = "smart-agriculture-auth";
 
 const getApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
@@ -35,7 +38,16 @@ export const apiClient = create({
   },
 });
 
-apiClient.interceptors.request.use((config) => config);
+apiClient.interceptors.request.use(async (config) => {
+  const storedAuth = await AsyncStorage.getItem(AUTH_KEY);
+  const accessToken = storedAuth ? JSON.parse(storedAuth)?.accessToken : undefined;
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => response,

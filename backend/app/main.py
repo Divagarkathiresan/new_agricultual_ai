@@ -1,8 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import firebase_admin
-from firebase_admin import credentials
-from pathlib import Path
 
 try:
     from .routes import router
@@ -36,12 +33,6 @@ def startup():
         print("✅ Database connected successfully")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
-
-    # cred_path = Path(__file__).resolve().parent.parent / "firebase_service_account.json"
-    # cred = credentials.Certificate(str(cred_path))
-    # firebase_admin.initialize_app(cred)
-    # print("✅ Firebase initialized successfully")
-
 
 @app.get("/")
 def home():

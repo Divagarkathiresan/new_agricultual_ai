@@ -47,6 +47,7 @@ const defaultAuth: AuthSession = {
   isAuthenticated: false,
   phone: "",
   userId: "",
+  accessToken: "",
 };
 
 export const useAppStore = create<AppState>()(
