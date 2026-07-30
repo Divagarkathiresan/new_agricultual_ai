@@ -15,14 +15,14 @@ try:
     from .schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from .farm_schema import Farm
     from .auth import CurrentUser, create_access_token, get_current_user
-    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, save_satellite_report
+    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
     from .database import connection
 except ImportError:
     from model_loader import model, encoder
     from schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from farm_schema import Farm
     from auth import CurrentUser, create_access_token, get_current_user
-    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, save_satellite_report
+    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
     from database import connection
 
 router = APIRouter()
@@ -42,7 +42,6 @@ def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_curren
     })
 
     prediction = model.predict(sample)
-
     crop = encoder.inverse_transform(prediction)
 
     prediction_data = {
@@ -60,9 +59,7 @@ def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_curren
 
     save_prediction(prediction_data)
 
-    return {
-        "recommended_crop": crop[0]
-    }
+    return {"recommended_crop": crop[0]}
 
 
 @router.post("/register")
@@ -114,13 +111,14 @@ def check_otp(data: VerifyOTPRequest):
     if result == "invalid":
         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    # OTP verification is the application's login step.
     user = connection.users_collection.find_one({"phone": data.phone})
-    user_id = user.get("uid", data.phone) if user else data.phone
-    if user:
-        connection.users_collection.update_one(
-            {"_id": user["_id"]}, {"$set": {"last_login": datetime.utcnow()}}
-        )
+    if not user or not user.get("uid"):
+        raise HTTPException(status_code=404, detail="User not registered")
+
+    user_id = str(user["_id"])
+    connection.users_collection.update_one(
+        {"_id": user["_id"]}, {"$set": {"last_login": datetime.utcnow()}}
+    )
 
     return {
         "success": True,
@@ -129,6 +127,12 @@ def check_otp(data: VerifyOTPRequest):
         "access_token": create_access_token(user_id),
         "token_type": "bearer",
     }
+
+
+@router.get("/farms")
+def get_user_farms(current_user: CurrentUser = Depends(get_current_user)):
+    farms = get_farms_by_user(current_user.user_id)
+    return {"farms": farms}
 
 
 @router.post("/farm")
@@ -168,6 +172,7 @@ def run_ndvi(farm_id: str, current_user: CurrentUser = Depends(get_current_user)
         "health_score": result["health_score"],
         "healthy_area": result["healthy_area"],
         "status": result["status"],
+        "satellite_image_url": result["satellite_image_url"],
         "ndvi_image_url": result["ndvi_image_url"],
         "recommendation": recommendation_map.get(result["status"], ""),
         "created_at": datetime.utcnow().isoformat()

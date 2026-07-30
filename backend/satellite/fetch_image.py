@@ -19,7 +19,7 @@ def fetch_satellite_image(latitude, longitude):
 
     point = ee.Geometry.Point([longitude, latitude])
 
-    roi = point.buffer(500).bounds()
+    roi = point.buffer(100).bounds()
 
     # -----------------------------
     # Fetch latest Sentinel-2 image
@@ -28,15 +28,18 @@ def fetch_satellite_image(latitude, longitude):
     image = (
         ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         .filterBounds(roi)
-        .filterDate("2025-01-01", "2025-12-31")
+        .filterDate(
+            "2026-06-01",
+            "2026-07-15"
+        )
         .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 10))
         .sort("system:time_start", False)
         .first()
     )
 
-    if image is None:
-        print("No satellite image found.")
-        return
+    image_id = image.get("system:index").getInfo()
+    if not image_id:
+        return None
 
     # -----------------------------
     # Convert to RGB
@@ -74,8 +77,7 @@ def fetch_satellite_image(latitude, longitude):
         "format": "png"
     })
 
-    print("\nOpen this URL in your browser:\n")
-    print(url)
+    return url
 
 
 if __name__ == "__main__":

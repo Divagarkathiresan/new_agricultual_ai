@@ -4,6 +4,7 @@ import geemap
 from datetime import datetime, timedelta
 
 from config import initialize_gee
+from fetch_image import fetch_satellite_image
 
 def calculate_health_score(avg_ndvi):
 
@@ -38,26 +39,36 @@ def generate_ndvi(latitude, longitude):
     # ----------------------------
 
     end = datetime.utcnow()
-    start = end - timedelta(days=30)
+    start = end - timedelta(days=60)
 
     image = (
         ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         .filterBounds(roi)
-        .filterDate(start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"))
+        .filterDate(
+            "2026-06-01",
+            "2026-07-15"
+        )
         .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         .sort("system:time_start", False)
         .first()
     )
 
-    if image is None:
-        # print("No image found.")
-        return
+    image_id = image.get("system:index").getInfo()
+    if not image_id:
+        return None
 
     # ----------------------------
     # NDVI
     # ----------------------------
 
-    ndvi = image.normalizedDifference(["B8", "B4"]).rename("NDVI")
+    ndvi = (
+        image
+        .normalizedDifference(["B8","B4"])
+        .rename("NDVI")
+        .updateMask(
+            image.normalizedDifference(["B8","B4"]).gt(0.2)
+        )
+    )
 
     # ----------------------------
     # Color Palette
@@ -136,11 +147,14 @@ def generate_ndvi(latitude, longitude):
 
     # print("Healthy Area :", round(healthy_percentage, 2), "%")
 
+    # satellite_url = fetch_satellite_image(latitude, longitude)
+
     return {
         "average_ndvi": round(average_ndvi, 3),
         "health_score": score,
         "status": status,
         "healthy_area": round(healthy_percentage, 2),
+        "satellite_image_url": "satellite_url",
         "ndvi_image_url": url
     }
 

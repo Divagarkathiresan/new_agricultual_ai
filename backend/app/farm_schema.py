@@ -57,5 +57,6 @@ class SatelliteReport(BaseModel):
     healthy_area: float
     status: str
     ndvi_image_url: str
+    satellite_image_url: Optional[str] = None
     recommendation: str
     created_at: datetime = Field(default_factory=datetime.utcnow)

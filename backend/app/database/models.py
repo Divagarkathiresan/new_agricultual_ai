@@ -32,5 +32,13 @@ def get_farm_by_id(farm_id: str):
     from bson import ObjectId
     return connection.farms_collection.find_one({"_id": ObjectId(farm_id)})
 
+def get_farms_by_user(user_id: str):
+    farms = connection.farms_collection.find({"user_id": user_id})
+    result = []
+    for farm in farms:
+        farm["_id"] = str(farm["_id"])
+        result.append(farm)
+    return result
+
 def save_satellite_report(data: dict):
     return connection.satellite_reports_collection.insert_one(data)
