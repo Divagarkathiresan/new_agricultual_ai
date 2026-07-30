@@ -1,7 +1,11 @@
 import os
+import sys
 import ee
 import geemap
 from datetime import datetime, timedelta
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import initialize_gee
 from fetch_image import fetch_satellite_image

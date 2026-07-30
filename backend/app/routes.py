@@ -1,14 +1,9 @@
 import os
-import sys
 import random
 import requests
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import date, datetime
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parent.parent / "satellite"))
-from ndvi import generate_ndvi
 
 try:
     from .model_loader import model, encoder
@@ -17,6 +12,7 @@ try:
     from .auth import CurrentUser, create_access_token, get_current_user
     from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
     from .database import connection
+    from irrigation.irrigation_service import IrrigationService
 except ImportError:
     from model_loader import model, encoder
     from schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
@@ -24,9 +20,58 @@ except ImportError:
     from auth import CurrentUser, create_access_token, get_current_user
     from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
     from database import connection
+    from irrigation.irrigation_service import IrrigationService
 
 router = APIRouter()
 
+
+@router.get("/farm/{farm_id}/irrigation")
+def get_irrigation_plan(
+    farm_id: str,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+
+    # Check whether the farm exists
+    farm = get_farm_by_id(farm_id)
+
+    if not farm:
+        raise HTTPException(
+            status_code=404,
+            detail="Farm not found"
+        )
+
+    # Ensure the logged-in user owns this farm
+    if farm.get("user_id") != current_user.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have access to this farm"
+        )
+
+    # This also generates the NDVI/satellite analysis, so it is calculated once.
+    result = IrrigationService.generate_irrigation_plan(farm_id)
+
+    if result.get("success") is False:
+        raise HTTPException(
+            status_code=404,
+            detail=result["message"]
+        )
+
+    satellite = result["satellite"]
+    report = {
+        "farm_id": farm_id,
+        "image_date": datetime.utcnow().isoformat(),
+        "average_ndvi": satellite["average_ndvi"],
+        "health_score": satellite["health_score"],
+        "healthy_area": satellite["healthy_area"],
+        "status": satellite["status"],
+        "satellite_image_url": satellite["satellite_image_url"],
+        "ndvi_image_url": satellite["ndvi_image_url"],
+        "recommendation": satellite["recommendation"],
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    save_satellite_report(report)
+
+    return result
 
 @router.post("/predict")
 def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_current_user)):
@@ -141,44 +186,3 @@ def add_farm(data: Farm, current_user: CurrentUser = Depends(get_current_user)):
     farm["user_id"] = current_user.user_id
     result = create_farm(farm)
     return {"message": "Farm created successfully", "farm_id": str(result.inserted_id)}
-
-
-@router.post("/farm/{farm_id}/ndvi")
-def run_ndvi(farm_id: str, current_user: CurrentUser = Depends(get_current_user)):
-    farm = get_farm_by_id(farm_id)
-    if not farm:
-        raise HTTPException(status_code=404, detail="Farm not found")
-    if farm.get("user_id") != current_user.user_id:
-        raise HTTPException(status_code=403, detail="You do not have access to this farm")
-
-    latitude = farm["location"]["latitude"]
-    longitude = farm["location"]["longitude"]
-
-    result = generate_ndvi(latitude, longitude)
-    if not result:
-        raise HTTPException(status_code=500, detail="No satellite image found for this location")
-
-    recommendation_map = {
-        "Excellent": "Crop is healthy. Continue current practices.",
-        "Good": "Crop is doing well. Monitor for any changes.",
-        "Moderate": "Crop health is moderate. Consider additional fertilization.",
-        "Critical": "Crop health is critical. Immediate attention required."
-    }
-
-    report = {
-        "farm_id": farm_id,
-        "image_date": datetime.utcnow().isoformat(),
-        "average_ndvi": result["average_ndvi"],
-        "health_score": result["health_score"],
-        "healthy_area": result["healthy_area"],
-        "status": result["status"],
-        "satellite_image_url": result["satellite_image_url"],
-        "ndvi_image_url": result["ndvi_image_url"],
-        "recommendation": recommendation_map.get(result["status"], ""),
-        "created_at": datetime.utcnow().isoformat()
-    }
-
-    save_satellite_report(report)
-
-    report.pop("_id", None)
-    return report
