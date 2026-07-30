@@ -2,32 +2,58 @@ import os
 import random
 import requests
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import date, datetime
 
 try:
     from .model_loader import model, encoder
     from .schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from .farm_schema import Farm
+    from .irrigation_report_schema import IrrigationReport
     from .auth import CurrentUser, create_access_token, get_current_user
-    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
+    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, save_irrigation_report
     from .database import connection
     from irrigation.irrigation_service import IrrigationService
 except ImportError:
     from model_loader import model, encoder
     from schemas import CropInput, UserRegister, SendOTPRequest, VerifyOTPRequest
     from farm_schema import Farm
+    from irrigation_report_schema import IrrigationReport
     from auth import CurrentUser, create_access_token, get_current_user
-    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, save_satellite_report
+    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, save_irrigation_report
     from database import connection
     from irrigation.irrigation_service import IrrigationService
 
 router = APIRouter()
 
 
-@router.get("/farm/{farm_id}/irrigation")
+@router.get("/farm/{farm_id}/irrigation/report", response_model=IrrigationReport)
+def get_irrigation_report(
+    farm_id: str,
+    report_date: date = Query(default_factory=date.today),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    farm = get_farm_by_id(farm_id)
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    if farm.get("user_id") != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You do not have access to this farm")
+
+    report = get_irrigation_report_by_date(farm_id, report_date.isoformat())
+    if not report:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No irrigation report found for date {report_date.isoformat()}",
+        )
+
+    report.pop("_id", None)
+    return report
+
+
+@router.get("/farm/{farm_id}/irrigation", response_model=IrrigationReport)
 def get_irrigation_plan(
     farm_id: str,
+    report_date: date = Query(default_factory=date.today),
     current_user: CurrentUser = Depends(get_current_user)
 ):
 
@@ -47,7 +73,13 @@ def get_irrigation_plan(
             detail="You do not have access to this farm"
         )
 
-    # This also generates the NDVI/satellite analysis, so it is calculated once.
+    report_date_value = report_date.isoformat()
+    saved_report = get_irrigation_report_by_date(farm_id, report_date_value)
+    if saved_report:
+        saved_report.pop("_id", None)
+        return saved_report
+
+    # No report exists for this date, so generate the irrigation and NDVI analysis once.
     result = IrrigationService.generate_irrigation_plan(farm_id)
 
     if result.get("success") is False:
@@ -56,22 +88,55 @@ def get_irrigation_plan(
             detail=result["message"]
         )
 
-    satellite = result["satellite"]
-    report = {
-        "farm_id": farm_id,
-        "image_date": datetime.utcnow().isoformat(),
-        "average_ndvi": satellite["average_ndvi"],
-        "health_score": satellite["health_score"],
-        "healthy_area": satellite["healthy_area"],
-        "status": satellite["status"],
-        "satellite_image_url": satellite["satellite_image_url"],
-        "ndvi_image_url": satellite["ndvi_image_url"],
-        "recommendation": satellite["recommendation"],
-        "created_at": datetime.utcnow().isoformat(),
-    }
-    save_satellite_report(report)
+    report = IrrigationReport(
+        farm_id=farm_id,
+        report_date=report_date_value,
+        crop_name=result["crop_name"],
+        location=result["location"],
+        weather=result["weather"],
+        satellite=result["satellite"],
+        soil_moisture=result["soil_moisture"],
+        water_requirement=result["water_requirement"],
+        recommendation=result["recommendation"],
+    )
+    save_irrigation_report(report.model_dump())
+    return report
 
-    return result
+
+@router.post("/farm/{farm_id}/irrigation/report", status_code=201)
+def create_irrigation_report(
+    farm_id: str,
+    report: IrrigationReport,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Store a complete irrigation report for a farm owned by the caller."""
+    if report.farm_id != farm_id:
+        raise HTTPException(
+            status_code=400,
+            detail="The farm_id in the request body must match the URL farm_id.",
+        )
+
+    farm = get_farm_by_id(farm_id)
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    if farm.get("user_id") != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You do not have access to this farm")
+
+    existing_report = get_irrigation_report_by_date(
+        farm_id,
+        report.report_date,
+    )
+    if existing_report:
+        return {
+            "message": "Irrigation report already exists for this date",
+            "report_id": existing_report["_id"],
+        }
+
+    result = save_irrigation_report(report.model_dump())
+    return {
+        "message": "Irrigation report created successfully",
+        "report_id": str(result.inserted_id),
+    }
 
 @router.post("/predict")
 def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_current_user)):

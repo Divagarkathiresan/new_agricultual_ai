@@ -42,3 +42,15 @@ def get_farms_by_user(user_id: str):
 
 def save_satellite_report(data: dict):
     return connection.satellite_reports_collection.insert_one(data)
+
+def save_irrigation_report(data: dict):
+    return connection.irrigation_reports_collection.insert_one(data)
+
+def get_irrigation_report_by_date(farm_id: str, date: str):
+    report = connection.irrigation_reports_collection.find_one({
+        "farm_id": farm_id,
+        "report_date": date
+    })
+    if report:
+        report["_id"] = str(report["_id"])
+    return report
