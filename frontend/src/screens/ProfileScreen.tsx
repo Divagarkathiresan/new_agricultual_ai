@@ -42,7 +42,7 @@ export function ProfileScreen() {
           <Text style={styles.statLabel}>Enabled</Text>
         </View>
       </Card>
-      <AppButton title="Logout" variant="secondary" icon={<Text style={styles.logoutIcon}>OUT</Text>} onPress={handleLogout} />
+      <AppButton title="Logout" variant="secondary" icon={<Text style={styles.logoutIcon}></Text>} onPress={handleLogout} />
     </AppScreen>
   );
 }

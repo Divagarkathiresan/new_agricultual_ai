@@ -3,6 +3,7 @@ import random
 import requests
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from datetime import date, datetime
 
 try:
@@ -83,6 +84,41 @@ def get_irrigation_plan(
     result = IrrigationService.generate_irrigation_plan(farm_id)
 
     if result.get("success") is False:
+        if result.get("reason") == "satellite_unavailable":
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "farm_id": farm_id,
+                    "report_date": report_date_value,
+                    "crop_name": farm.get("crop_name", ""),
+                    "location": farm.get("location", {}),
+                    "weather": result.get("weather"),
+                    "satellite": {
+                        "average_ndvi": None,
+                        "health_score": None,
+                        "healthy_area": None,
+                        "status": "Satellite data unavailable",
+                        "satellite_image_url": None,
+                        "ndvi_image_url": None,
+                        "recommendation": result["message"],
+                    },
+                    "soil_moisture": {
+                        "soil_moisture_score": None,
+                        "soil_moisture_level": "Unavailable",
+                    },
+                    "water_requirement": result.get("water_requirement"),
+                    "recommendation": {
+                        "irrigation_status": "Unavailable",
+                        "recommendation": "Satellite data is unavailable for this farm right now. Try again after new imagery is available.",
+                        "best_irrigation_time": None,
+                        "soil_moisture_level": "Unavailable",
+                        "soil_moisture_score": None,
+                        "estimated_water_required_liters": result.get("water_requirement", {}).get("water_required_liters"),
+                        "estimated_water_saved_liters": None,
+                        "generated_at": datetime.utcnow().isoformat(),
+                    },
+                },
+            )
         raise HTTPException(
             status_code=404,
             detail=result["message"]

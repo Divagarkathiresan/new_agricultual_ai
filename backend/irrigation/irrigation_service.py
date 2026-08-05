@@ -56,9 +56,22 @@ class IrrigationService:
         )
 
         if not satellite:
+            water = WaterRequirementCalculator.calculate(
+
+                crop_name=crop_name,
+
+                area=area,
+
+                unit=unit
+
+            )
+
             return {
                 "success": False,
-                "message": "No satellite image found for this location."
+                "reason": "satellite_unavailable",
+                "message": "No satellite image found for this location.",
+                "weather": weather,
+                "water_requirement": water
             }
 
         ndvi = satellite["average_ndvi"]

@@ -1,9 +1,9 @@
 import Constants from "expo-constants";
+import { router } from "expo-router";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "axios";
 
-const AUTH_KEY = "smart-agriculture-auth";
+import { clearAuthSession, getAccessToken } from "@/services/authStorage";
 
 const getApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
@@ -39,8 +39,7 @@ export const apiClient = create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
-  const storedAuth = await AsyncStorage.getItem(AUTH_KEY);
-  const accessToken = storedAuth ? JSON.parse(storedAuth)?.accessToken : undefined;
+  const accessToken = await getAccessToken();
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -52,8 +51,17 @@ apiClient.interceptors.request.use(async (config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (error.response?.status === 401) {
+      await clearAuthSession();
+      router.replace("/login" as never);
+      return Promise.reject(new Error("Your session has expired. Please log in again."));
+    }
+
     const config = error.config;
-    if (!config || config.__retryCount >= 1) {
+    const status = error.response?.status;
+    const shouldRetry = !status || status >= 500;
+
+    if (!shouldRetry || !config || config.__retryCount >= 1) {
       const message =
         error.response?.data?.detail ||
         error.response?.data?.message ||

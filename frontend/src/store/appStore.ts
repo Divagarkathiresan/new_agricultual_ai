@@ -2,9 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { clearAuthSession, getAuthSession, saveAuthSession } from "@/services/authStorage";
 import type { AuthSession, CropPredictionResult, Farm, FarmFormValues } from "@/types/domain";
-
-const AUTH_KEY = "smart-agriculture-auth";
 
 const initialDraft: FarmFormValues = {
   user_id: "",
@@ -60,13 +59,13 @@ export const useAppStore = create<AppState>()(
       selectedFarm: null,
       hasSeenOnboarding: false,
       initializeAuth: async () => {
-        const saved = await AsyncStorage.getItem(AUTH_KEY);
+        const saved = await getAuthSession();
         if (!saved) return;
-        set({ auth: JSON.parse(saved) as AuthSession });
+        set({ auth: saved });
       },
       setAuthenticated: async (session) => {
         const auth = { ...session, isAuthenticated: true };
-        await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+        await saveAuthSession(auth);
         set((state) => ({
           auth,
           addFarmDraft: {
@@ -76,8 +75,8 @@ export const useAppStore = create<AppState>()(
         }));
       },
       logout: async () => {
-        await AsyncStorage.removeItem(AUTH_KEY);
-        set({ auth: defaultAuth, predictionResult: null });
+        await clearAuthSession();
+        set({ auth: defaultAuth, predictionResult: null, farms: [], selectedFarm: null });
       },
       setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
       updateFarmDraft: (values) =>

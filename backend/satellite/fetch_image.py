@@ -3,6 +3,7 @@ import sys
 
 import ee
 import geemap
+from ee.ee_exception import EEException
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -29,7 +30,7 @@ def fetch_satellite_image(latitude, longitude):
     # Fetch latest Sentinel-2 image
     # -----------------------------
 
-    image = (
+    collection = (
         ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         .filterBounds(roi)
         .filterDate(
@@ -38,10 +39,17 @@ def fetch_satellite_image(latitude, longitude):
         )
         .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 10))
         .sort("system:time_start", False)
-        .first()
     )
 
-    image_id = image.get("system:index").getInfo()
+    try:
+        if collection.size().getInfo() == 0:
+            return None
+
+        image = collection.first()
+        image_id = image.get("system:index").getInfo()
+    except EEException:
+        return None
+
     if not image_id:
         return None
 

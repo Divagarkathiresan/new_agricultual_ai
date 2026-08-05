@@ -2,6 +2,7 @@ import os
 import sys
 import ee
 import geemap
+from ee.ee_exception import EEException
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -45,19 +46,26 @@ def generate_ndvi(latitude, longitude):
     end = datetime.utcnow()
     start = end - timedelta(days=60)
 
-    image = (
+    collection = (
         ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         .filterBounds(roi)
         .filterDate(
-            "2026-06-01",
-            "2026-07-15"
+            start.strftime("%Y-%m-%d"),
+            end.strftime("%Y-%m-%d")
         )
         .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         .sort("system:time_start", False)
-        .first()
     )
 
-    image_id = image.get("system:index").getInfo()
+    try:
+        if collection.size().getInfo() == 0:
+            return None
+
+        image = collection.first()
+        image_id = image.get("system:index").getInfo()
+    except EEException:
+        return None
+
     if not image_id:
         return None
 
@@ -121,7 +129,13 @@ def generate_ndvi(latitude, longitude):
     maxPixels=1e9
     )
 
-    average_ndvi = stats.get("NDVI").getInfo()
+    try:
+        average_ndvi = stats.get("NDVI").getInfo()
+    except EEException:
+        return None
+
+    if average_ndvi is None:
+        return None
 
     # print(f"\nAverage NDVI : {average_ndvi:.3f}")
 
@@ -147,7 +161,12 @@ def generate_ndvi(latitude, longitude):
         maxPixels=1e9
     )
 
-    healthy_percentage = healthy_stats.get("NDVI").getInfo() * 100
+    try:
+        healthy_mean = healthy_stats.get("NDVI").getInfo()
+    except EEException:
+        return None
+
+    healthy_percentage = (healthy_mean or 0) * 100
 
     # print("Healthy Area :", round(healthy_percentage, 2), "%")
 

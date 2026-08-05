@@ -1,4 +1,4 @@
-import type { CropPredictionInput, CropPredictionResult, Farm, FarmFormValues } from "@/types/domain";
+import type { CropPredictionInput, CropPredictionResult, Farm, FarmFormValues, IrrigationReport } from "@/types/domain";
 
 import { apiClient } from "./client";
 
@@ -65,4 +65,55 @@ export const createFarm = async (payload: FarmFormValues): Promise<Farm> => {
     _id: data?.farm_id,
     status: "Active",
   };
+};
+
+const normalizeFarm = (farm: Farm): Farm => ({
+  ...farm,
+  id: farm.id || farm._id,
+  _id: farm._id || farm.id,
+  status: farm.status || "Active",
+});
+
+export const fetchFarms = async (): Promise<Farm[]> => {
+  const { data } = await apiClient.get("/farms");
+  return (data?.farms || []).map(normalizeFarm);
+};
+
+export const fetchFarmIrrigationReport = async (farmId: string): Promise<IrrigationReport> => {
+  try {
+    const { data } = await apiClient.get(`/farm/${farmId}/irrigation`);
+    return data;
+  } catch (error: any) {
+    if (String(error?.message || "").toLowerCase().includes("no satellite image")) {
+      return {
+        farm_id: farmId,
+        report_date: new Date().toISOString().slice(0, 10),
+        crop_name: "",
+        satellite: {
+          average_ndvi: null,
+          health_score: null,
+          healthy_area: null,
+          status: "Satellite data unavailable",
+          satellite_image_url: null,
+          ndvi_image_url: null,
+          recommendation: "Satellite data is unavailable for this farm right now. Try again after new imagery is available.",
+        },
+        soil_moisture: {
+          soil_moisture_score: null,
+          soil_moisture_level: "Unavailable",
+        },
+        recommendation: {
+          irrigation_status: "Unavailable",
+          recommendation: "Satellite data is unavailable for this farm right now. Try again after new imagery is available.",
+          best_irrigation_time: null,
+          soil_moisture_level: "Unavailable",
+          soil_moisture_score: null,
+          estimated_water_required_liters: null,
+          estimated_water_saved_liters: null,
+          generated_at: null,
+        },
+      };
+    }
+    throw error;
+  }
 };
