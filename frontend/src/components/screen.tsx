@@ -28,6 +28,8 @@ export function AppScreen({
 
   return (
     <SafeAreaView style={[styles.container, width >= 980 && styles.centerContainer]}>
+      <View style={styles.backgroundGlowTop} />
+      <View style={styles.backgroundGlowBottom} />
       {content}
       {withNav ? <BottomNav /> : null}
     </SafeAreaView>
@@ -38,6 +40,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.background,
+  },
+  backgroundGlowTop: {
+    position: "absolute",
+    top: -120,
+    right: -90,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: "rgba(102, 187, 106, 0.22)",
+  },
+  backgroundGlowBottom: {
+    position: "absolute",
+    left: -110,
+    bottom: 70,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(223, 242, 240, 0.76)",
   },
   centerContainer: {
     alignItems: "center",

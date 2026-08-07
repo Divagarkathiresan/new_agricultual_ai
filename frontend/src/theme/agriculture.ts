@@ -2,9 +2,9 @@ export const palette = {
   primary: "#2E7D32",
   primaryDark: "#195D24",
   secondary: "#66BB6A",
-  background: "#F7FAF5",
-  card: "#FFFFFF",
-  border: "#DCE9D5",
+  background: "#EEF7ED",
+  card: "rgba(255, 255, 255, 0.72)",
+  border: "rgba(255, 255, 255, 0.62)",
   text: "#1F321D",
   muted: "#697663",
   caption: "#87927F",
@@ -24,8 +24,8 @@ export const radius = {
 
 export const shadow = {
   shadowColor: "#1A3B18",
-  shadowOffset: { width: 0, height: 10 },
-  shadowOpacity: 0.09,
-  shadowRadius: 22,
-  elevation: 5,
+  shadowOffset: { width: 0, height: 14 },
+  shadowOpacity: 0.13,
+  shadowRadius: 28,
+  elevation: 7,
 };

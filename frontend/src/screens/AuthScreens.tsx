@@ -32,7 +32,7 @@ function AuthShell({ children, title, subtitle }: { children: React.ReactNode; t
     <ImageBackground source={require("../../assets/images/paddy-login.png")} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
         <View style={styles.shell}>
-          <BrandMark />
+          {/* <BrandMark /> */}
           <Card style={styles.authCard}>
             <Text style={styles.title}>Smart Agriculture</Text>
             <Text style={styles.subtitle}>{title}</Text>
@@ -218,7 +218,8 @@ const styles = StyleSheet.create({
   },
   authCard: {
     gap: 16,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    borderColor: "rgba(255, 255, 255, 0.78)",
   },
   title: {
     color: palette.primary,

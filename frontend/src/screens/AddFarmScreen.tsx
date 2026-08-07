@@ -278,7 +278,9 @@ const styles = StyleSheet.create({
   locationBox: {
     minHeight: 52,
     borderRadius: 16,
-    backgroundColor: palette.surfaceGreen,
+    backgroundColor: "rgba(234, 246, 231, 0.62)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.68)",
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -323,7 +325,7 @@ const styles = StyleSheet.create({
   successCard: {
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#EAF7E8",
+    backgroundColor: "rgba(234, 247, 232, 0.66)",
   },
   successIcon: {
     color: palette.primary,

@@ -210,7 +210,9 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     borderRadius: 14,
-    backgroundColor: palette.surfaceGreen,
+    backgroundColor: "rgba(234, 246, 231, 0.62)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.66)",
     padding: 12,
     gap: 4,
   },

@@ -224,9 +224,9 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   secondaryButton: {
-    backgroundColor: palette.surfaceGreen,
+    backgroundColor: "rgba(234, 246, 231, 0.64)",
     borderWidth: 1,
-    borderColor: "#CFE6C8",
+    borderColor: "rgba(255, 255, 255, 0.72)",
   },
   ghostButton: {
     backgroundColor: "transparent",
@@ -255,9 +255,9 @@ const styles = StyleSheet.create({
   inputShell: {
     minHeight: 54,
     borderWidth: 1,
-    borderColor: palette.border,
+    borderColor: "rgba(255, 255, 255, 0.72)",
     borderRadius: radius.md,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255, 255, 255, 0.58)",
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: 18,
     borderWidth: 1,
-    borderColor: "rgba(220, 233, 213, 0.86)",
+    borderColor: "rgba(255, 255, 255, 0.72)",
     ...shadow,
   },
   brandMark: {
@@ -366,7 +366,9 @@ const styles = StyleSheet.create({
     width: 95,
     minHeight: 132,
     borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.88)",
+    backgroundColor: "rgba(255, 255, 255, 0.68)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.72)",
     alignSelf: "flex-start",
     padding: 15,
     gap: 12,

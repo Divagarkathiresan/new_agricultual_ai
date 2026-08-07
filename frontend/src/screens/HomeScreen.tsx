@@ -63,7 +63,7 @@ export function HomeScreen() {
                 <Text style={styles.greeting}>Hello, {auth.name || "Farmer"}</Text>
                 <Text style={styles.caption}>Your farm dashboard is ready</Text>
               </View>
-              <BrandMark compact />
+              {/* <BrandMark compact /> */}
             </View>
             <View style={styles.heroBottom}>
               <View>
@@ -283,10 +283,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quickInner: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255, 255, 255, 0.66)",
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "rgba(220, 233, 213, 0.92)",
+    borderColor: "rgba(255, 255, 255, 0.74)",
     padding: 16,
     gap: 10,
   },
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: palette.surfaceGreen,
+    backgroundColor: "rgba(234, 246, 231, 0.72)",
     alignItems: "center",
     justifyContent: "center",
   },
