@@ -217,7 +217,7 @@ export function AddFarmScreen() {
               />
             )} />
             <Controller control={control} name="area.unit" render={({ field }) => (
-              <FieldInput label="Unit" value={field.value} onChangeText={field.onChange} />
+              <FieldInput label="Unit" value={field.value} onChangeText={field.onChange} style={styles.unitInput} />
             )} />
           </View>
 
@@ -260,9 +260,15 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     gap: 12,
+    flexWrap: "wrap",
   },
   flexInput: {
     minWidth: 0,
+    flex: 1,
+  },
+  unitInput: {
+    width: 118,
+    minWidth: 100,
   },
   suggestButton: {
     minHeight: 44,

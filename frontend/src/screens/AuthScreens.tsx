@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useLocalSearchParams } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
@@ -68,13 +68,13 @@ export function LoginScreen() {
         name="phone"
         render={({ field, fieldState }) => (
           <FieldInput
+            left={<Text style={styles.prefix}>+91</Text>}
             label="Phone Number"
             value={field.value}
             onChangeText={(value) => field.onChange(value.replace(/\D/g, ""))}
             keyboardType="number-pad"
             maxLength={10}
             error={fieldState.error?.message}
-            right={<Text style={styles.prefix}>+91</Text>}
           />
         )}
       />
@@ -122,7 +122,7 @@ export function RegisterScreen() {
             keyboardType="number-pad"
             maxLength={10}
             error={fieldState.error?.message}
-            right={<Text style={styles.prefix}>+91</Text>}
+            left={<Text style={styles.prefix}>+91</Text>}
           />
         )}
       />
@@ -135,8 +135,9 @@ export function RegisterScreen() {
 export function OtpScreen() {
   const { phone, name } = useLocalSearchParams<{ phone?: string; name?: string }>();
   const toast = useToast();
+  const hasAutoSubmitted = React.useRef(false);
   const setAuthenticated = useAppStore((state) => state.setAuthenticated);
-  const { control, handleSubmit, formState, reset, setValue } = useForm<OtpForm>({
+  const { control, handleSubmit, formState, setValue } = useForm<OtpForm>({
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: "" },
   });
@@ -146,7 +147,7 @@ export function OtpScreen() {
 
   const normalizedPhone = (phoneNumber || "").replace(/^\+91/, "");
 
-  const onSubmit = async ({ otp }: OtpForm) => {
+  const onSubmit = useCallback(async ({ otp }: OtpForm) => {
     if (!phoneNumber) {
       toast.show("Phone number is missing.", "error");
       return;
@@ -169,10 +170,11 @@ export function OtpScreen() {
     } catch (error: any) {
       toast.show(error.message || "OTP verification failed.", "error");
     }
-  };
+  }, [displayName, phoneNumber, setAuthenticated, toast]);
 
   useEffect(() => {
-    if (normalizedPhone === "1234567890") {
+    if (normalizedPhone === "1234567890" && !hasAutoSubmitted.current) {
+      hasAutoSubmitted.current = true;
       setValue("otp", "123456");
       handleSubmit(onSubmit)();
     }
@@ -238,6 +240,6 @@ const styles = StyleSheet.create({
   prefix: {
     color: palette.primary,
     fontWeight: "800",
-    paddingRight: 14,
+    paddingLeft: 14,
   },
 });

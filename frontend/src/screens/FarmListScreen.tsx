@@ -12,10 +12,12 @@ import { useAppStore } from "@/store/appStore";
 import { palette } from "@/theme/agriculture";
 import type { Farm } from "@/types/domain";
 
+const EMPTY_FARMS: Farm[] = [];
+
 export function FarmListScreen() {
   const setFarms = useAppStore((state) => state.setFarms);
   const setSelectedFarm = useAppStore((state) => state.setSelectedFarm);
-  const { data = [], error, isLoading, isRefetching, refetch } = useQuery({
+  const { data = EMPTY_FARMS, error, isLoading, isRefetching, refetch } = useQuery({
     queryKey: ["farms"],
     queryFn: fetchFarms,
   });
@@ -144,6 +146,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flexWrap: "wrap",
   },
   iconBox: {
     width: 48,
@@ -178,9 +181,11 @@ const styles = StyleSheet.create({
   metaGrid: {
     flexDirection: "row",
     gap: 8,
+    flexWrap: "wrap",
   },
   meta: {
     flex: 1,
+    minWidth: 120,
     backgroundColor: "#F7FBF5",
     borderRadius: 14,
     padding: 10,

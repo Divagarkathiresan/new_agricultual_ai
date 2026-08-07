@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { Animated, Platform, StatusBar, Text, View } from "react-native";
 
 type ToastType = "success" | "error";
@@ -15,7 +15,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const opacityValue = useMemo(() => new Animated.Value(0), []);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const show = (message: string, type: ToastType = "success") => {
+  const show = useCallback((message: string, type: ToastType = "success") => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setToast({ message, type });
 
@@ -49,12 +49,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         }),
       ]).start(() => setToast(null));
     }, 3000);
-  };
+  }, [animatedValue, opacityValue]);
 
   const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 0);
 
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={useMemo(() => ({ show }), [show])}>
       {children}
       {toast ? (
         <Animated.View

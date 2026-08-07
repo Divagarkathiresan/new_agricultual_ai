@@ -29,11 +29,9 @@ type AppState = {
   predictionResult: CropPredictionResult | null;
   farms: Farm[];
   selectedFarm: Farm | null;
-  hasSeenOnboarding: boolean;
   initializeAuth: () => Promise<void>;
   setAuthenticated: (session: Omit<AuthSession, "isAuthenticated">) => Promise<void>;
   logout: () => Promise<void>;
-  setHasSeenOnboarding: (seen: boolean) => void;
   updateFarmDraft: (values: Partial<FarmFormValues>) => void;
   resetFarmDraft: (userId?: string) => void;
   setPredictionResult: (result: CropPredictionResult | null) => void;
@@ -57,7 +55,6 @@ export const useAppStore = create<AppState>()(
       predictionResult: null,
       farms: [],
       selectedFarm: null,
-      hasSeenOnboarding: false,
       initializeAuth: async () => {
         const saved = await getAuthSession();
         if (!saved) return;
@@ -78,7 +75,6 @@ export const useAppStore = create<AppState>()(
         await clearAuthSession();
         set({ auth: defaultAuth, predictionResult: null, farms: [], selectedFarm: null });
       },
-      setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
       updateFarmDraft: (values) =>
         set((state) => ({
           addFarmDraft: {
@@ -115,7 +111,6 @@ export const useAppStore = create<AppState>()(
         predictionResult: state.predictionResult,
         farms: state.farms,
         selectedFarm: state.selectedFarm,
-        hasSeenOnboarding: state.hasSeenOnboarding,
       }),
     },
   ),

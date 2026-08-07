@@ -59,14 +59,16 @@ export const AppButton = memo(function AppButton({
 type InputProps = TextInputProps & {
   label: string;
   error?: string;
+  left?: React.ReactNode;
   right?: React.ReactNode;
 };
 
-export function FieldInput({ label, error, right, style, ...props }: InputProps) {
+export function FieldInput({ label, error, left, right, style, ...props }: InputProps) {
   return (
     <View style={styles.inputWrap}>
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputShell, error && styles.inputError]}>
+        {left}
         <TextInput
           {...props}
           placeholderTextColor="#8C9685"
@@ -215,6 +217,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     paddingHorizontal: 18,
+    flexShrink: 1,
   },
   primaryButton: {
     backgroundColor: palette.primary,
@@ -265,6 +268,7 @@ const styles = StyleSheet.create({
     color: palette.text,
     fontSize: 15,
     paddingHorizontal: 14,
+    minWidth: 0,
   },
   inputError: {
     borderColor: palette.danger,

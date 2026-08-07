@@ -8,7 +8,6 @@ import { palette } from "@/theme/agriculture";
 
 export function SplashScreen() {
   const initializeAuth = useAppStore((state) => state.initializeAuth);
-  const hasSeenOnboarding = useAppStore((state) => state.hasSeenOnboarding);
   const auth = useAppStore((state) => state.auth);
   const scale = React.useMemo(() => new Animated.Value(0.82), []);
   const opacity = React.useMemo(() => new Animated.Value(0), []);
@@ -21,9 +20,7 @@ export function SplashScreen() {
     ]).start();
 
     const timeout = setTimeout(() => {
-      if (!hasSeenOnboarding) {
-        router.replace("/onboarding" as never);
-      } else if (auth.isAuthenticated) {
+      if (auth.isAuthenticated) {
         router.replace("/homepage" as never);
       } else {
         router.replace("/login" as never);
@@ -31,7 +28,7 @@ export function SplashScreen() {
     }, 2000);
 
     return () => clearTimeout(timeout);
-  }, [auth.isAuthenticated, hasSeenOnboarding, initializeAuth, opacity, scale]);
+  }, [auth.isAuthenticated, initializeAuth, opacity, scale]);
 
   return (
     <View style={styles.container}>

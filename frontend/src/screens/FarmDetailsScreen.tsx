@@ -334,7 +334,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   metric: {
-    width: "48%",
+    flex: 1,
+    minWidth: 140,
     minHeight: 92,
     borderRadius: 16,
     backgroundColor: "#F7FBF5",
@@ -375,6 +376,7 @@ const styles = StyleSheet.create({
     height: 230,
     borderRadius: 16,
     backgroundColor: "#EDF4EA",
+    minWidth: "100%",
   },
   imageZoomContent: {
     minHeight: 230,

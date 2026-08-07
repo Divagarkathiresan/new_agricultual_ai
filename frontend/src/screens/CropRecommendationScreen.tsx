@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, Text, View } from "react-native";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
 import { AppScreen } from "@/components/screen";
@@ -24,14 +24,14 @@ const recommendationSchema = z.object({
   rainfall: z.coerce.number().nonnegative("Required"),
 });
 
-const fields: { key: keyof Omit<CropPredictionInput, "phone">; label: string; unit: string }[] = [
-  { key: "N", label: "Nitrogen", unit: "kg/ha" },
-  { key: "P", label: "Phosphorus", unit: "kg/ha" },
-  { key: "K", label: "Potassium", unit: "kg/ha" },
-  { key: "temperature", label: "Temperature", unit: "deg C" },
-  { key: "humidity", label: "Humidity", unit: "%" },
-  { key: "ph", label: "Soil pH", unit: "pH" },
-  { key: "rainfall", label: "Rainfall", unit: "mm" },
+const fields: { key: keyof Omit<CropPredictionInput, "phone">; label: string; unit: string; placeholder: string }[] = [
+  { key: "N", label: "Nitrogen", unit: "kg/ha", placeholder: "90" },
+  { key: "P", label: "Phosphorus", unit: "kg/ha", placeholder: "42" },
+  { key: "K", label: "Potassium", unit: "kg/ha", placeholder: "43" },
+  { key: "temperature", label: "Temperature", unit: "deg C", placeholder: "20.8" },
+  { key: "humidity", label: "Humidity", unit: "%", placeholder: "82" },
+  { key: "ph", label: "Soil pH", unit: "pH", placeholder: "6.5" },
+  { key: "rainfall", label: "Rainfall", unit: "mm", placeholder: "202" },
 ];
 
 type RecommendationForm = z.infer<typeof recommendationSchema>;
@@ -45,15 +45,7 @@ export function CropRecommendationScreen() {
   const [submitted, setSubmitted] = useState(false);
   const { control, handleSubmit, formState } = useForm<RecommendationForm>({
     resolver: zodResolver(recommendationSchema) as never,
-    defaultValues: {
-      N: 90,
-      P: 42,
-      K: 43,
-      temperature: 20.8797,
-      humidity: 82.0027,
-      ph: 6.5029,
-      rainfall: 202.9355,
-    },
+    defaultValues: {},
   });
 
   const mutation = useMutation({
@@ -84,6 +76,12 @@ export function CropRecommendationScreen() {
   return (
     <AppScreen withNav>
       <SectionHeader title="Crop Recommendation" caption="Enter soil, weather, and environmental values for the AI crop model." />
+      <ImageBackground source={require("../../assets/images/paddy-register.png")} style={styles.cropHero} imageStyle={styles.cropHeroImage} resizeMode="cover">
+        <View style={styles.cropHeroShade}>
+          <Text style={styles.cropHeroTitle}>Paddy field advisor</Text>
+          <Text style={styles.cropHeroText}>Use local farm readings to find a crop match before saving your field plan.</Text>
+        </View>
+      </ImageBackground>
       <Card style={styles.formCard}>
         {fields.map((field) => (
           <Controller
@@ -94,7 +92,8 @@ export function CropRecommendationScreen() {
               <FieldInput
                 label={`${field.label} (${field.unit})`}
                 value={String(controllerField.value ?? "")}
-                onChangeText={controllerField.onChange}
+                onChangeText={(value) => controllerField.onChange(value === "" ? undefined : value)}
+                placeholder={field.placeholder}
                 keyboardType="decimal-pad"
                 error={fieldState.error?.message}
               />
@@ -149,6 +148,38 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  cropHero: {
+    minHeight: 230,
+    width: "100%",
+    overflow: "hidden",
+    borderRadius: 22,
+  },
+  cropHeroImage: {
+    borderRadius: 22,
+  },
+  cropHeroShade: {
+    flex: 1,
+    justifyContent: "flex-end",
+    padding: 18,
+    backgroundColor: "rgba(10, 43, 17, 0.16)",
+  },
+  cropHeroTitle: {
+    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "900",
+    textShadowColor: "rgba(0, 0, 0, 0.48)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
+  },
+  cropHeroText: {
+    color: "#FFFFFF",
+    marginTop: 6,
+    fontWeight: "700",
+    lineHeight: 20,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
+  },
   formCard: {
     gap: 14,
   },
@@ -203,6 +234,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap: 12,
+    flexWrap: "wrap",
   },
   action: {
     flex: 1,
