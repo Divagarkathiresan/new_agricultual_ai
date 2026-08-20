@@ -38,7 +38,7 @@ export function HomeScreen() {
 
       <View>
         <Text style={styles.greeting}>Hello, {auth.name || "Farmer"} 👋</Text>
-        <Text style={styles.caption}>Here's what's happening in your farm today.</Text>
+        <Text style={styles.caption}>Here&apos;s what&apos;s happening in your farm today.</Text>
       </View>
 
       <Card style={styles.weatherCard}>

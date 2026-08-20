@@ -117,3 +117,13 @@ export const fetchFarmIrrigationReport = async (farmId: string): Promise<Irrigat
     throw error;
   }
 };
+
+export const fetchFarmIrrigationReports = async (farmId: string): Promise<IrrigationReport[]> => {
+  const { data } = await apiClient.get(`/farm/${farmId}/irrigation/reports`);
+  const reports = Array.isArray(data) ? data : data?.reports || data?.irrigation_reports || [];
+  return [...reports].sort((a: IrrigationReport, b: IrrigationReport) => {
+    const dayA = typeof a.crop_day === "number" ? a.crop_day : Number.MAX_SAFE_INTEGER;
+    const dayB = typeof b.crop_day === "number" ? b.crop_day : Number.MAX_SAFE_INTEGER;
+    return dayA - dayB;
+  });
+};

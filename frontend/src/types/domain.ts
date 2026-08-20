@@ -60,6 +60,8 @@ export type AuthSession = {
 export type IrrigationReport = {
   farm_id: string;
   report_date: string;
+  crop_day?: number | null;
+  crop_stage?: string | null;
   crop_name: string;
   location?: Record<string, unknown>;
   weather?: {
