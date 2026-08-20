@@ -1,0 +1,551 @@
+{
+  "model_info": {
+    "model_name": "Crop Disease Detection - Retrained ResNet50",
+    "version": "3.0",
+    "last_updated": "2025-09-09",
+    "training_dataset": "Pepper, Potato, and Tomato Disease Dataset",
+    "total_classes": 15,
+    "test_accuracy": 0.9009,
+    "validation_accuracy": 0.9006,
+    "model_file": "models/crop_disease_retrained_final.pth",
+    "training_samples": 14440,
+    "validation_samples": 3089,
+    "test_samples": 3109,
+    "supported_crops": ["Pepper (Bell)", "Potato", "Tomato"]
+  },
+  "diseases": [
+    {
+      "crop": "Pepper (Bell)",
+      "disease": "Bacterial_spot",
+      "class_name": "Pepper__bell___Bacterial_spot",
+      "description": "Caused by Xanthomonas bacteria. Creates dark, water-soaked spots on leaves, stems, and fruits. Thrives in warm, humid conditions with overhead irrigation.",
+      "symptoms": [
+        "Small, dark brown to black spots on leaves",
+        "Water-soaked appearance of lesions",
+        "Yellow halos around older spots",
+        "Spots on fruits appear raised and scabby",
+        "Premature defoliation in severe cases"
+      ],
+      "solutions": [
+        "Apply copper-based bactericides preventively",
+        "Use bacterial spot resistant varieties",
+        "Improve air circulation around plants",
+        "Avoid overhead irrigation",
+        "Remove infected plant debris",
+        "Practice crop rotation with non-host crops"
+      ],
+      "prevention": [
+        "Use certified disease-free seeds and transplants",
+        "Avoid working in fields when plants are wet",
+        "Maintain proper plant spacing",
+        "Apply drip irrigation instead of overhead watering",
+        "Sanitize tools between plants"
+      ],
+      "severity": "High",
+      "confidence_threshold": 0.92
+    },
+    {
+      "crop": "Pepper (Bell)",
+      "disease": "Healthy",
+      "class_name": "Pepper__bell___healthy",
+      "description": "Healthy bell pepper plants with no visible disease symptoms.",
+      "symptoms": [
+        "Vibrant green, uniform colored leaves",
+        "No spots, lesions, or discoloration",
+        "Normal plant growth and development",
+        "Healthy fruit development"
+      ],
+      "solutions": [
+        "Continue current management practices",
+        "Maintain regular monitoring",
+        "Ensure proper nutrition and watering"
+      ],
+      "prevention": [
+        "Regular inspection for early disease detection",
+        "Proper sanitation practices",
+        "Balanced fertilization",
+        "Appropriate irrigation management"
+      ],
+      "severity": "None",
+      "confidence_threshold": 0.95
+    },
+    {
+      "crop": "Potato",
+      "disease": "Early_blight",
+      "class_name": "Potato___Early_blight",
+      "description": "Caused by Alternaria solani fungus. Creates concentric ring patterns on leaves and can affect tubers. Common in warm, humid conditions with plant stress.",
+      "symptoms": [
+        "Dark brown spots with concentric rings (target spots)",
+        "Yellow halos around lesions",
+        "Lower leaves affected first",
+        "V-shaped lesions at leaf margins",
+        "Premature defoliation",
+        "Dark, sunken spots on tubers"
+      ],
+      "solutions": [
+        "Apply fungicides containing chlorothalonil or mancozeb",
+        "Remove infected lower leaves",
+        "Improve air circulation",
+        "Avoid overhead irrigation",
+        "Apply balanced fertilization",
+        "Harvest tubers when skin is set"
+      ],
+      "prevention": [
+        "Plant certified disease-free seed potatoes",
+        "Rotate crops with non-solanaceous plants",
+        "Maintain proper plant nutrition",
+        "Avoid plant stress from drought or excess nitrogen",
+        "Clean up crop debris after harvest"
+      ],
+      "severity": "Medium to High",
+      "confidence_threshold": 0.96
+    },
+    {
+      "crop": "Potato",
+      "disease": "Late_blight",
+      "class_name": "Potato___Late_blight",
+      "description": "Caused by Phytophthora infestans. The same pathogen that caused the Irish Potato Famine. Spreads rapidly in cool, wet conditions.",
+      "symptoms": [
+        "Water-soaked, dark green to brown lesions",
+        "White, fuzzy sporulation on leaf undersides",
+        "Rapid spread during cool, wet weather",
+        "Blackening and collapse of stems",
+        "Firm, brown rot of tubers",
+        "Entire plant death possible"
+      ],
+      "solutions": [
+        "Apply preventive fungicides (metalaxyl, chlorothalonil)",
+        "Remove infected plants immediately",
+        "Improve drainage and air circulation",
+        "Monitor weather conditions closely",
+        "Destroy volunteer potatoes",
+        "Cure tubers properly before storage"
+      ],
+      "prevention": [
+        "Plant certified seed potatoes",
+        "Choose late blight resistant varieties",
+        "Avoid overhead irrigation",
+        "Hill soil properly around plants",
+        "Monitor local disease forecasts",
+        "Destroy cull piles and volunteers"
+      ],
+      "severity": "Very High",
+      "confidence_threshold": 0.86
+    },
+    {
+      "crop": "Potato",
+      "disease": "Healthy",
+      "class_name": "Potato___healthy",
+      "description": "Healthy potato plants with no visible disease symptoms.",
+      "symptoms": [
+        "Bright green, healthy foliage",
+        "Normal plant growth and development",
+        "No spots, lesions, or discoloration",
+        "Vigorous stem growth"
+      ],
+      "solutions": [
+        "Continue current management practices",
+        "Maintain regular monitoring",
+        "Ensure proper nutrition and watering"
+      ],
+      "prevention": [
+        "Regular field inspection",
+        "Proper crop rotation",
+        "Balanced fertilization",
+        "Appropriate irrigation management"
+      ],
+      "severity": "None",
+      "confidence_threshold": 0.38
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Target_Spot",
+      "class_name": "Tomato__Target_Spot",
+      "description": "Caused by Corynespora cassiicola fungus. Creates concentric ring spots on leaves and can affect fruits. Favored by warm, humid conditions.",
+      "symptoms": [
+        "Small, dark brown spots with concentric rings",
+        "Target-like appearance of lesions",
+        "Yellow halos around spots",
+        "Spots can merge causing leaf blight",
+        "Fruit lesions are dark and sunken",
+        "Premature defoliation"
+      ],
+      "solutions": [
+        "Apply fungicides containing azoxystrobin or chlorothalonil",
+        "Remove infected plant debris",
+        "Improve air circulation",
+        "Avoid overhead watering",
+        "Practice crop rotation",
+        "Remove lower leaves touching soil"
+      ],
+      "prevention": [
+        "Plant resistant varieties when available",
+        "Maintain proper plant spacing",
+        "Use drip irrigation",
+        "Apply mulch to prevent soil splash",
+        "Sanitize tools and equipment"
+      ],
+      "severity": "Medium",
+      "confidence_threshold": 0.87
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Tomato_mosaic_virus",
+      "class_name": "Tomato__Tomato_mosaic_virus",
+      "description": "Viral disease causing mosaic patterns on leaves. Transmitted through infected seeds, mechanical transmission, and contaminated tools.",
+      "symptoms": [
+        "Light and dark green mosaic pattern on leaves",
+        "Mottled appearance of foliage",
+        "Stunted plant growth",
+        "Reduced fruit size and yield",
+        "Fruit may show irregular ripening",
+        "Leaf distortion and curling"
+      ],
+      "solutions": [
+        "Remove infected plants immediately",
+        "Control aphid vectors",
+        "Sanitize tools with 10% bleach solution",
+        "Avoid smoking near plants",
+        "Use virus-free transplants",
+        "Control weeds that may harbor virus"
+      ],
+      "prevention": [
+        "Use certified virus-free seeds",
+        "Wash hands before handling plants",
+        "Avoid mechanical transmission",
+        "Control insect vectors",
+        "Remove infected plant debris",
+        "Practice crop rotation"
+      ],
+      "severity": "High",
+      "confidence_threshold": 0.67
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Tomato_YellowLeaf_Curl_Virus",
+      "class_name": "Tomato__Tomato_YellowLeaf__Curl_Virus",
+      "description": "Viral disease transmitted by whiteflies. Causes severe yield losses in warm climates. One of the most devastating tomato diseases.",
+      "symptoms": [
+        "Upward curling and yellowing of leaves",
+        "Stunted plant growth",
+        "Reduced fruit set and size",
+        "Thick, leathery leaf texture",
+        "Purple veins on leaf undersides",
+        "Severe yield reduction"
+      ],
+      "solutions": [
+        "Control whitefly vectors with insecticides",
+        "Remove infected plants",
+        "Use reflective mulches",
+        "Apply systemic insecticides",
+        "Install fine mesh screens in greenhouses",
+        "Monitor and trap whiteflies"
+      ],
+      "prevention": [
+        "Plant resistant varieties",
+        "Control whitefly populations",
+        "Remove weeds that harbor whiteflies",
+        "Use yellow sticky traps",
+        "Avoid planting near infected crops",
+        "Time planting to avoid peak whitefly populations"
+      ],
+      "severity": "Very High",
+      "confidence_threshold": 0.94
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Bacterial_spot",
+      "class_name": "Tomato_Bacterial_spot",
+      "description": "Caused by Xanthomonas bacteria. Creates dark spots on leaves and fruits. Spreads rapidly in warm, wet conditions.",
+      "symptoms": [
+        "Small, dark brown to black spots on leaves",
+        "Water-soaked appearance of lesions",
+        "Yellow halos around spots",
+        "Raised, scabby spots on fruits",
+        "Premature defoliation",
+        "Fruit cracking and secondary infections"
+      ],
+      "solutions": [
+        "Apply copper-based bactericides",
+        "Use resistant varieties",
+        "Improve air circulation",
+        "Avoid overhead irrigation",
+        "Remove infected plant debris",
+        "Practice crop rotation"
+      ],
+      "prevention": [
+        "Use certified disease-free seeds",
+        "Avoid working in wet fields",
+        "Maintain proper plant spacing",
+        "Use drip irrigation systems",
+        "Sanitize tools between plants",
+        "Remove volunteer tomatoes"
+      ],
+      "severity": "High",
+      "confidence_threshold": 0.94
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Early_blight",
+      "class_name": "Tomato_Early_blight",
+      "description": "Caused by Alternaria solani fungus. Creates target spot lesions on leaves and can affect fruits. Common during warm, humid periods.",
+      "symptoms": [
+        "Dark brown spots with concentric rings",
+        "Target-like appearance of lesions",
+        "Yellow halos around spots",
+        "Lower leaves affected first",
+        "Premature defoliation",
+        "Dark, sunken spots on fruits"
+      ],
+      "solutions": [
+        "Apply fungicides containing chlorothalonil",
+        "Remove infected lower leaves",
+        "Improve air circulation",
+        "Avoid overhead watering",
+        "Apply balanced fertilization",
+        "Stake plants properly"
+      ],
+      "prevention": [
+        "Use certified disease-free transplants",
+        "Rotate crops with non-solanaceous plants",
+        "Maintain proper plant nutrition",
+        "Mulch around plants",
+        "Remove crop debris after harvest",
+        "Space plants adequately"
+      ],
+      "severity": "Medium",
+      "confidence_threshold": 0.77
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Healthy",
+      "class_name": "Tomato_healthy",
+      "description": "Healthy tomato plants with no visible disease symptoms.",
+      "symptoms": [
+        "Vibrant green, healthy foliage",
+        "Normal plant growth and development",
+        "No spots, lesions, or discoloration",
+        "Healthy fruit development",
+        "Strong stem structure"
+      ],
+      "solutions": [
+        "Continue current management practices",
+        "Maintain regular monitoring",
+        "Ensure proper nutrition and watering"
+      ],
+      "prevention": [
+        "Regular inspection for early disease detection",
+        "Proper sanitation practices",
+        "Balanced fertilization",
+        "Appropriate irrigation management"
+      ],
+      "severity": "None",
+      "confidence_threshold": 0.97
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Late_blight",
+      "class_name": "Tomato_Late_blight",
+      "description": "Caused by Phytophthora infestans. Rapid-spreading disease favored by cool, wet conditions. Can destroy entire crops quickly.",
+      "symptoms": [
+        "Water-soaked, dark green lesions",
+        "White, fuzzy sporulation on leaf undersides",
+        "Rapid spread during cool, wet weather",
+        "Brown, firm rot of fruits",
+        "Blackening of stems",
+        "Collapse of entire plant"
+      ],
+      "solutions": [
+        "Apply preventive fungicides immediately",
+        "Remove infected plants",
+        "Improve drainage and air circulation",
+        "Monitor weather conditions",
+        "Destroy infected fruit and debris",
+        "Harvest healthy fruits early"
+      ],
+      "prevention": [
+        "Plant resistant varieties",
+        "Avoid overhead irrigation",
+        "Ensure good air circulation",
+        "Monitor disease forecasts",
+        "Remove volunteer tomatoes",
+        "Practice crop rotation"
+      ],
+      "severity": "Very High",
+      "confidence_threshold": 0.86
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Leaf_Mold",
+      "class_name": "Tomato_Leaf_Mold",
+      "description": "Caused by Passalora fulva fungus. Primarily affects greenhouse tomatoes. Thrives in high humidity conditions.",
+      "symptoms": [
+        "Yellow spots on upper leaf surfaces",
+        "Olive-green, velvety mold on leaf undersides",
+        "Progressive yellowing and browning",
+        "Premature defoliation",
+        "Reduced fruit quality",
+        "Poor air circulation enhances disease"
+      ],
+      "solutions": [
+        "Improve ventilation in greenhouses",
+        "Reduce humidity levels",
+        "Apply fungicides containing chlorothalonil",
+        "Remove infected leaves",
+        "Increase plant spacing",
+        "Control temperature and humidity"
+      ],
+      "prevention": [
+        "Plant resistant varieties",
+        "Maintain proper ventilation",
+        "Control greenhouse humidity",
+        "Avoid overhead watering",
+        "Monitor environmental conditions",
+        "Remove crop debris"
+      ],
+      "severity": "Medium",
+      "confidence_threshold": 0.87
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Septoria_leaf_spot",
+      "class_name": "Tomato_Septoria_leaf_spot",
+      "description": "Caused by Septoria lycopersici fungus. Creates small circular spots with dark borders. Favored by warm, wet weather.",
+      "symptoms": [
+        "Small, circular spots with dark borders",
+        "Gray to tan center with dark margin",
+        "Tiny black specks (pycnidia) in spot centers",
+        "Yellow halos around spots",
+        "Lower leaves affected first",
+        "Progressive defoliation upward"
+      ],
+      "solutions": [
+        "Apply fungicides containing chlorothalonil or copper",
+        "Remove infected lower leaves",
+        "Improve air circulation",
+        "Avoid overhead watering",
+        "Stake plants to improve airflow",
+        "Apply mulch to prevent soil splash"
+      ],
+      "prevention": [
+        "Rotate crops with non-solanaceous plants",
+        "Use certified disease-free transplants",
+        "Maintain proper plant spacing",
+        "Remove crop debris after harvest",
+        "Avoid working in wet fields",
+        "Apply balanced fertilization"
+      ],
+      "severity": "Medium",
+      "confidence_threshold": 0.91
+    },
+    {
+      "crop": "Tomato",
+      "disease": "Spider_mites_Two_spotted_spider_mite",
+      "class_name": "Tomato_Spider_mites_Two_spotted_spider_mite",
+      "description": "Caused by Tetranychus urticae. Tiny arachnids that feed on plant cells. Thrive in hot, dry conditions.",
+      "symptoms": [
+        "Fine stippling or speckling on leaves",
+        "Yellow or bronze discoloration",
+        "Fine webbing on leaves and stems",
+        "Premature leaf drop",
+        "Reduced plant vigor",
+        "Severe infestations cause plant death"
+      ],
+      "solutions": [
+        "Apply miticides or insecticidal soaps",
+        "Increase humidity around plants",
+        "Release predatory mites",
+        "Spray with water to dislodge mites",
+        "Remove heavily infested leaves",
+        "Apply reflective mulches"
+      ],
+      "prevention": [
+        "Maintain adequate soil moisture",
+        "Avoid over-fertilization with nitrogen",
+        "Monitor plants regularly",
+        "Encourage beneficial insects",
+        "Remove weeds that harbor mites",
+        "Avoid dusty conditions"
+      ],
+      "severity": "Medium to High",
+      "confidence_threshold": 0.91
+    }
+  ],
+  "treatment_recommendations": {
+    "organic_treatments": {
+      "fungal_diseases": [
+        "Copper-based fungicides",
+        "Baking soda solutions",
+        "Neem oil applications",
+        "Compost tea sprays",
+        "Milk solutions (for powdery mildew)"
+      ],
+      "bacterial_diseases": [
+        "Copper sulfate treatments",
+        "Hydrogen peroxide solutions",
+        "Essential oil treatments",
+        "Proper sanitation practices"
+      ],
+      "viral_diseases": [
+        "Remove infected plants",
+        "Control insect vectors",
+        "Use resistant varieties",
+        "Improve sanitation"
+      ],
+      "pest_management": [
+        "Beneficial insect release",
+        "Insecticidal soaps",
+        "Diatomaceous earth",
+        "Row covers for protection"
+      ]
+    },
+    "chemical_treatments": {
+      "systemic_fungicides": [
+        "Azoxystrobin",
+        "Propiconazole",
+        "Metalaxyl",
+        "Tebuconazole"
+      ],
+      "contact_fungicides": [
+        "Chlorothalonil",
+        "Mancozeb",
+        "Copper compounds",
+        "Sulfur"
+      ],
+      "bactericides": [
+        "Copper hydroxide",
+        "Copper oxychloride",
+        "Streptomycin (where permitted)"
+      ],
+      "insecticides": [
+        "Imidacloprid",
+        "Thiamethoxam",
+        "Spinosad",
+        "Bifenthrin"
+      ]
+    }
+  },
+  "general_prevention": {
+    "cultural_practices": [
+      "Crop rotation with non-host plants",
+      "Proper plant spacing for air circulation",
+      "Drip irrigation instead of overhead watering",
+      "Mulching to prevent soil splash",
+      "Regular field sanitation",
+      "Removal of crop debris"
+    ],
+    "monitoring": [
+      "Regular field inspections",
+      "Weather monitoring for disease-favorable conditions",
+      "Early detection and rapid response",
+      "Record keeping of disease occurrences",
+      "Soil and plant tissue testing"
+    ],
+    "resistance_management": [
+      "Use of resistant varieties",
+      "Rotation of fungicide modes of action",
+      "Integrated pest management approaches",
+      "Maintaining genetic diversity in crops"
+    ]
+  }
+}
