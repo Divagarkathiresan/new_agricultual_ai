@@ -1,3 +1,5 @@
 import { LoginScreen } from "@/screens/AuthScreens";
 
-export default LoginScreen;
+export default function LoginRoute() {
+	return <LoginScreen />;
+}

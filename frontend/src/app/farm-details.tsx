@@ -1,3 +1,5 @@
 import { FarmDetailsScreen } from "@/screens/FarmDetailsScreen";
 
-export default FarmDetailsScreen;
+export default function FarmDetailsRoute() {
+	return <FarmDetailsScreen />;
+}

@@ -40,6 +40,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "expo-location",
       "expo-secure-store"
     ],
     "experiments": {

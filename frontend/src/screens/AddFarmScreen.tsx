@@ -5,7 +5,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import * as Location from "expo-location";
 
 import { AppScreen } from "@/components/screen";
 import { AppButton, Card, FieldInput, SectionHeader } from "@/components/ui";
@@ -14,6 +13,16 @@ import { createFarm } from "@/services/api";
 import { useAppStore } from "@/store/appStore";
 import { palette } from "@/theme/agriculture";
 import type { FarmFormValues } from "@/types/domain";
+
+type LocationModule = typeof import("expo-location");
+
+const getLocation = (): LocationModule | null => {
+  try {
+    return require("expo-location") as LocationModule;
+  } catch {
+    return null;
+  }
+};
 
 const farmSchema = z.object({
   user_id: z.string().min(1),
@@ -85,8 +94,13 @@ export function AddFarmScreen() {
       latitude = position.coords.latitude;
       longitude = position.coords.longitude;
     } else {
-      // Request permission
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const locationModule = getLocation();
+      if (!locationModule) {
+        setLocationDenied(true);
+        return;
+      }
+
+      const { status } = await locationModule.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         setLocationDenied(true);
@@ -98,8 +112,8 @@ export function AddFarmScreen() {
       // Try 3 times because iOS may initially return kCLErrorLocationUnknown
       for (let i = 0; i < 3; i++) {
         try {
-          location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
+          location = await locationModule.getCurrentPositionAsync({
+            accuracy: locationModule.Accuracy.High,
           });
 
           if (location) break;
@@ -114,7 +128,7 @@ export function AddFarmScreen() {
 
       // Fallback to last known location
       if (!location) {
-        location = await Location.getLastKnownPositionAsync();
+        location = await locationModule.getLastKnownPositionAsync();
       }
 
       if (!location) {

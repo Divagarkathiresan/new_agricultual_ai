@@ -1,3 +1,5 @@
 import { RegisterScreen } from "@/screens/AuthScreens";
 
-export default RegisterScreen;
+export default function RegisterRoute() {
+	return <RegisterScreen />;
+}
