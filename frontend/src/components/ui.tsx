@@ -13,6 +13,7 @@ import {
   ViewStyle,
 } from "react-native";
 
+import { Illustration } from "@/components/illustrations";
 import { palette, radius, shadow } from "@/theme/agriculture";
 
 type ButtonProps = {
@@ -140,7 +141,7 @@ export function AnimatedCard({
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <View style={[styles.brandMark, compact && styles.compactBrand]}>
-      <Text style={[styles.brandText, compact && styles.compactBrandText]}>AI</Text>
+      <Text style={[styles.brandText, compact && styles.compactBrandText]}>SA</Text>
     </View>
   );
 }
@@ -180,38 +181,13 @@ export function RotatingSquareLoader() {
 }
 
 export function AgricultureIllustration({ variant = 0 }: { variant?: number }) {
-  const rows = variant === 1 ? ["#66BB6A", "#A5D6A7", "#2E7D32"] : ["#8BC34A", "#66BB6A", "#43A047"];
-  return (
-    <View style={[styles.illustration, variant === 2 && styles.illustrationSky]}>
-      <View style={styles.sun} />
-      <View style={styles.hills}>
-        {rows.map((color, index) => (
-          <View
-            key={color}
-            style={[
-              styles.cropRow,
-              {
-                backgroundColor: color,
-                width: `${94 - index * 12}%`,
-                bottom: 18 + index * 24,
-              },
-            ]}
-          />
-        ))}
-      </View>
-      <View style={styles.phonePanel}>
-        <Text style={styles.panelIcon}>AI</Text>
-        <View style={styles.panelLine} />
-        <View style={[styles.panelLine, { width: 40 }]} />
-      </View>
-    </View>
-  );
+  return <Illustration name={variant === 1 ? "crop-recommendation" : variant === 2 ? "empty-farm" : "welcome-farm"} />;
 }
 
 const styles = StyleSheet.create({
   button: {
     minHeight: 54,
-    borderRadius: radius.lg,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -224,9 +200,9 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   secondaryButton: {
-    backgroundColor: "rgba(234, 246, 231, 0.64)",
+    backgroundColor: palette.lightGreen,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.72)",
+    borderColor: "#D8ECD6",
   },
   ghostButton: {
     backgroundColor: "transparent",
@@ -255,9 +231,9 @@ const styles = StyleSheet.create({
   inputShell: {
     minHeight: 54,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.72)",
-    borderRadius: radius.md,
-    backgroundColor: "rgba(255, 255, 255, 0.58)",
+    borderColor: palette.border,
+    borderRadius: radius.lg,
+    backgroundColor: "#FFFFFF",
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
@@ -284,7 +260,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: palette.text,
-    fontSize: 21,
+    fontSize: 18,
     fontWeight: "900",
   },
   sectionCaption: {
@@ -294,16 +270,16 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: palette.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: 18,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.72)",
+    borderColor: palette.border,
     ...shadow,
   },
   brandMark: {
-    width: 76,
-    height: 76,
-    borderRadius: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 22,
     backgroundColor: palette.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -312,7 +288,7 @@ const styles = StyleSheet.create({
   compactBrand: {
     width: 44,
     height: 44,
-    borderRadius: 16,
+    borderRadius: 17,
   },
   brandText: {
     color: "#FFFFFF",

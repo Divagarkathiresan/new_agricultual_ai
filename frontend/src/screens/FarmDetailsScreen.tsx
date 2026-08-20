@@ -6,6 +6,7 @@ import { ArrowLeft, CloudRain, Droplets, Gauge, MapPin, Satellite, Thermometer, 
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AppScreen } from "@/components/screen";
+import { Illustration } from "@/components/illustrations";
 import { AnimatedCard, AppButton, Card, SectionHeader } from "@/components/ui";
 import { API_BASE_URL } from "@/services/api/client";
 import { fetchFarmIrrigationReport } from "@/services/api";
@@ -94,8 +95,13 @@ export function FarmDetailsScreen() {
           </AnimatedCard>
 
           <AnimatedCard delay={70}>
-            <Card style={styles.card}>
-              <SectionHeader title="Crop Health" />
+            <Card style={styles.healthCard}>
+              <SectionHeader title="Crop Health" caption="NDVI and moisture, simplified for quick decisions." />
+              <Illustration name="satellite-ndvi" height={145} />
+              <View style={styles.ndviHero}>
+                <Metric label="NDVI" value={formatNumber(data?.satellite?.average_ndvi, 2)} icon={<Gauge size={18} color={palette.primary} />} />
+                <Metric label="Status" value={healthStatus(data?.satellite?.health_score, data?.satellite?.status)} />
+              </View>
               <ProgressMetric label="Health Score" value={data?.satellite?.health_score} color={palette.primary} />
               <ProgressMetric label="Soil Moisture Score" value={data?.soil_moisture?.soil_moisture_score} color="#1E88E5" />
               <View style={styles.twoCol}>
@@ -133,6 +139,14 @@ export function FarmDetailsScreen() {
                 <Metric label="Rain Probability" value={formatUnit(data?.weather?.rain_probability, "%")} icon={<CloudRain size={18} color="#4569B0" />} />
                 <Metric label="Wind Speed" value={formatUnit(data?.weather?.wind_speed, "km/h")} icon={<Wind size={18} color={palette.muted} />} />
               </View>
+            </Card>
+          </AnimatedCard>
+
+          <AnimatedCard delay={250}>
+            <Card style={styles.card}>
+              <SectionHeader title="Crop Lifecycle" caption="Current growth progress for the saved crop plan." />
+              <Illustration name="crop-lifecycle" height={150} />
+              <ProgressMetric label="Lifecycle Progress" value={selectedFarm?.planting_date ? 42 : 12} color={palette.primary} />
             </Card>
           </AnimatedCard>
         </>
@@ -235,6 +249,15 @@ const formatLocation = (farmLocation?: { latitude: number; longitude: number }, 
   return placeholder;
 };
 
+const healthStatus = (score?: number | null, fallback?: string | null) => {
+  if (typeof score === "number") {
+    if (score >= 75) return "Healthy";
+    if (score >= 45) return "Moderate";
+    return "Poor";
+  }
+  return fallback || placeholder;
+};
+
 const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
@@ -266,6 +289,14 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: 12,
+  },
+  healthCard: {
+    gap: 14,
+  },
+  ndviHero: {
+    flexDirection: "row",
+    gap: 10,
+    flexWrap: "wrap",
   },
   centerCard: {
     gap: 14,

@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleProp, StyleSheet, useWindowDimensions, View, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BottomNav } from "@/components/bottom-nav";
@@ -15,8 +15,8 @@ export function AppScreen({
   withNav?: boolean;
 }) {
   const { width } = useWindowDimensions();
-  const pageWidth = Math.min(980, Math.max(320, width - 32));
-  const contentStyle = [styles.content, withNav ? styles.navPadding : undefined, { width: pageWidth, alignSelf: "center" }] as const;
+  const pageWidth = Math.min(760, Math.max(320, width - 24));
+  const contentStyle: StyleProp<ViewStyle> = [styles.content, withNav ? styles.navPadding : undefined, { width: pageWidth, alignSelf: "center" }];
 
   const content = scroll ? (
     <ScrollView contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false}>
@@ -28,8 +28,6 @@ export function AppScreen({
 
   return (
     <SafeAreaView style={[styles.container, width >= 980 && styles.centerContainer]}>
-      <View style={styles.backgroundGlowTop} />
-      <View style={styles.backgroundGlowBottom} />
       {content}
       {withNav ? <BottomNav /> : null}
     </SafeAreaView>
@@ -41,24 +39,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.background,
   },
-  backgroundGlowTop: {
-    position: "absolute",
-    top: -120,
-    right: -90,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: "rgba(102, 187, 106, 0.22)",
-  },
-  backgroundGlowBottom: {
-    position: "absolute",
-    left: -110,
-    bottom: 70,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: "rgba(223, 242, 240, 0.76)",
-  },
   centerContainer: {
     alignItems: "center",
   },
@@ -66,8 +46,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 26,
     gap: 18,
   },

@@ -1,217 +1,153 @@
-import React, { useEffect, useMemo } from "react";
+import React from "react";
 import { router } from "expo-router";
-import { Animated, ImageBackground, StyleSheet, Text, View } from "react-native";
-import { LogOut, MapPinned, Phone, ShieldCheck, Sparkles } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { BookOpen, ChevronRight, CircleHelp, ClipboardList, FileText, LogOut, MapPinned, PenLine, Settings, Sprout } from "lucide-react-native";
 
+import { Illustration } from "@/components/illustrations";
 import { AppScreen } from "@/components/screen";
-import { AppButton, BrandMark, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { useAppStore } from "@/store/appStore";
 import { palette } from "@/theme/agriculture";
 
+const menu = [
+  { label: "Farm Details", Icon: MapPinned, path: "/farms" },
+  { label: "Soil Tests History", Icon: ClipboardList },
+  { label: "Advisory History", Icon: Sprout, path: "/predict-crop" },
+  { label: "Saved Reports", Icon: FileText },
+  { label: "Settings", Icon: Settings },
+  { label: "Help & Support", Icon: CircleHelp },
+];
+
 export function ProfileScreen() {
   const auth = useAppStore((state) => state.auth);
-  const farms = useAppStore((state) => state.farms);
   const logout = useAppStore((state) => state.logout);
-  const profileOpacity = useMemo(() => new Animated.Value(0), []);
-  const profileTranslate = useMemo(() => new Animated.Value(22), []);
 
   const handleLogout = async () => {
     await logout();
     router.replace("/login" as never);
   };
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(profileOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.spring(profileTranslate, { toValue: 0, damping: 16, stiffness: 95, useNativeDriver: true }),
-    ]).start();
-  }, [profileOpacity, profileTranslate]);
-
   return (
     <AppScreen withNav>
-      <Animated.View style={{ opacity: profileOpacity, transform: [{ translateY: profileTranslate }] }}>
-        <ImageBackground source={require("../../assets/images/paddy-register.png")} style={styles.cover} imageStyle={styles.coverImage} resizeMode="cover">
-          <View style={styles.coverShade}>
-            <View style={styles.coverTop}>
-              <Text style={styles.screenTitle}>Profile</Text>
-              <View style={styles.securePill}>
-                <ShieldCheck size={15} color="#FFFFFF" />
-                <Text style={styles.secureText}>OTP Secure</Text>
-              </View>
-            </View>
-            <View style={styles.identity}>
-              <BrandMark />
-              <View style={styles.identityText}>
-                <Text style={styles.name}>{auth.name || "Smart Farmer"}</Text>
-                <View style={styles.infoRow}>
-                  <Phone size={15} color="#E9F8E5" />
-                  <Text style={styles.info}>{auth.phone || "No phone saved"}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </Animated.View>
+      <View style={styles.header}>
+        <Illustration name="farmer" width={96} height={96} />
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{auth.name || "Smart Farmer"}</Text>
+          <Text style={styles.phone}>{auth.phone || "No phone saved"}</Text>
+          <Pressable style={styles.editButton}>
+            <PenLine size={14} color="#FFFFFF" />
+            <Text style={styles.editText}>Edit Profile</Text>
+          </Pressable>
+        </View>
+      </View>
 
-      <Card style={styles.statsCard}>
-        <ProfileStat icon={<MapPinned size={20} color={palette.primary} />} value={`${farms.length}`} label="Farms" />
-        <ProfileStat icon={<Sparkles size={20} color={palette.primary} />} value="AI" label="Advisor" />
-        <ProfileStat icon={<ShieldCheck size={20} color={palette.primary} />} value="GPS" label="Enabled" />
+      <Card style={styles.menuCard}>
+        {menu.map(({ label, Icon, path }) => (
+          <Pressable key={label} style={styles.menuRow} onPress={() => path && router.push(path as never)}>
+            <View style={styles.menuIcon}>
+              <Icon size={20} color={palette.primary} />
+            </View>
+            <Text style={styles.menuLabel}>{label}</Text>
+            <ChevronRight size={18} color={palette.caption} />
+          </Pressable>
+        ))}
+        <Pressable style={styles.menuRow} onPress={handleLogout}>
+          <View style={[styles.menuIcon, styles.logoutIcon]}>
+            <LogOut size={20} color={palette.danger} />
+          </View>
+          <Text style={[styles.menuLabel, styles.logoutText]}>Logout</Text>
+          <ChevronRight size={18} color={palette.caption} />
+        </Pressable>
       </Card>
 
-      <Card style={styles.farmImageCard}>
-        <ImageBackground source={require("../../assets/images/paddy-login.png")} style={styles.farmImage} imageStyle={styles.farmImageRadius} resizeMode="cover">
-          <View style={styles.farmImageShade}>
-            <Text style={styles.farmImageTitle}>Farm workspace</Text>
-            <Text style={styles.farmImageText}>Keep your crop plans, fields, and recommendations close together.</Text>
-          </View>
-        </ImageBackground>
+      <Card style={styles.reportCard}>
+        <BookOpen size={22} color={palette.primary} />
+        <Text style={styles.reportTitle}>AI farming records</Text>
+        <Text style={styles.reportText}>Your farm plans, advisories, reports, and recommendations stay connected to your secure session.</Text>
       </Card>
-
-      <AppButton title="Logout" variant="secondary" icon={<LogOut size={18} color={palette.primary} />} onPress={handleLogout} />
     </AppScreen>
   );
 }
 
-function ProfileStat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  const scale = useMemo(() => new Animated.Value(0.96), []);
-
-  useEffect(() => {
-    Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 100, useNativeDriver: true }).start();
-  }, [scale]);
-
-  return (
-    <Animated.View style={[styles.stat, { transform: [{ scale }] }]}>
-      <View style={styles.statIcon}>{icon}</View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
-  cover: {
-    minHeight: 280,
-    width: "100%",
-    borderRadius: 26,
-    overflow: "hidden",
-  },
-  coverImage: {
-    borderRadius: 26,
-  },
-  coverShade: {
-    flex: 1,
-    justifyContent: "space-between",
-    padding: 18,
-    backgroundColor: "rgba(9, 36, 16, 0.42)",
-  },
-  coverTop: {
+  header: {
+    borderRadius: 30,
+    backgroundColor: palette.primary,
+    padding: 20,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+    gap: 16,
   },
-  screenTitle: {
+  headerText: {
+    flex: 1,
+    gap: 7,
+  },
+  title: {
     color: "#FFFFFF",
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "900",
   },
-  securePill: {
+  phone: {
+    color: "#EAF7E8",
+    fontWeight: "800",
+  },
+  editButton: {
+    alignSelf: "flex-start",
     minHeight: 34,
-    borderRadius: 13,
+    borderRadius: 999,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.26)",
+    backgroundColor: "rgba(255,255,255,0.18)",
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
   },
-  secureText: {
+  editText: {
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "900",
   },
-  identity: {
+  menuCard: {
+    paddingVertical: 8,
+  },
+  menuRow: {
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    flexWrap: "wrap",
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
   },
-  identityText: {
-    flex: 1,
-  },
-  name: {
-    color: "#FFFFFF",
-    fontSize: 25,
-    fontWeight: "900",
-  },
-  infoRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    marginTop: 7,
-  },
-  info: {
-    color: "#E9F8E5",
-    fontWeight: "800",
-  },
-  statsCard: {
-    flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  stat: {
-    flex: 1,
-    alignItems: "center",
-    gap: 5,
-  },
-  statIcon: {
-    width: 42,
-    height: 42,
+  menuIcon: {
+    width: 38,
+    height: 38,
     borderRadius: 15,
-    backgroundColor: "rgba(234, 246, 231, 0.68)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.64)",
+    backgroundColor: palette.lightGreen,
     alignItems: "center",
     justifyContent: "center",
   },
-  statValue: {
-    color: palette.primary,
-    fontSize: 22,
-    fontWeight: "900",
+  logoutIcon: {
+    backgroundColor: "#FDECEC",
   },
-  statLabel: {
-    color: palette.muted,
-    fontWeight: "800",
-    fontSize: 12,
-  },
-  farmImageCard: {
-    padding: 0,
-    overflow: "hidden",
-  },
-  farmImage: {
-    minHeight: 170,
-    width: "100%",
-  },
-  farmImageRadius: {
-    borderRadius: 20,
-  },
-  farmImageShade: {
+  menuLabel: {
     flex: 1,
-    justifyContent: "flex-end",
-    padding: 18,
-    backgroundColor: "rgba(16, 54, 18, 0.42)",
+    color: palette.text,
+    fontWeight: "800",
   },
-  farmImageTitle: {
-    color: "#FFFFFF",
-    fontSize: 20,
+  logoutText: {
+    color: palette.danger,
+  },
+  reportCard: {
+    gap: 8,
+    backgroundColor: palette.mint,
+  },
+  reportTitle: {
+    color: palette.text,
+    fontSize: 17,
     fontWeight: "900",
   },
-  farmImageText: {
-    color: "#EEF8EA",
-    marginTop: 6,
-    fontWeight: "700",
+  reportText: {
+    color: palette.muted,
     lineHeight: 20,
+    fontWeight: "600",
   },
 });

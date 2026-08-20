@@ -2,10 +2,11 @@ import React, { useCallback, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useLocalSearchParams } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
-import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
-import { AppButton, BrandMark, Card, FieldInput } from "@/components/ui";
+import { Illustration } from "@/components/illustrations";
+import { AppButton, Card, FieldInput } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { registerUser, sendOtpToPhone, verifyOtpWithBackend } from "@/services/api";
 import { useAppStore } from "@/store/appStore";
@@ -27,21 +28,21 @@ type PhoneForm = z.infer<typeof phoneSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 type OtpForm = z.infer<typeof otpSchema>;
 
-function AuthShell({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle: string }) {
+function AuthShell({ children, title, subtitle, art = "login-farm" }: { children: React.ReactNode; title: string; subtitle: string; art?: "login-farm" | "otp-landscape" }) {
   return (
-    <ImageBackground source={require("../../assets/images/paddy-login.png")} style={styles.background} resizeMode="cover">
-      <View style={styles.overlay}>
-        <View style={styles.shell}>
-          {/* <BrandMark /> */}
-          <Card style={styles.authCard}>
-            <Text style={styles.title}>Smart Agriculture</Text>
-            <Text style={styles.subtitle}>{title}</Text>
-            <Text style={styles.caption}>{subtitle}</Text>
-            {children}
-          </Card>
-        </View>
+    <View style={styles.background}>
+      <View style={styles.shell}>
+        <Text style={styles.brand}>Smart Agriculture AI</Text>
+        <Card style={styles.authCard}>
+          <Text style={styles.subtitle}>{title}</Text>
+          <Text style={styles.caption}>{subtitle}</Text>
+          {children}
+        </Card>
       </View>
-    </ImageBackground>
+      <View style={styles.bottomArt}>
+        <Illustration name={art} height={210} />
+      </View>
+    </View>
   );
 }
 
@@ -62,14 +63,14 @@ export function LoginScreen() {
   };
 
   return (
-    <AuthShell title="Welcome Back" subtitle="Enter your mobile number to continue">
+    <AuthShell title="Welcome Back! 👋" subtitle="Enter your mobile number to continue">
       <Controller
         control={control}
         name="phone"
         render={({ field, fieldState }) => (
           <FieldInput
             left={<Text style={styles.prefix}>+91</Text>}
-            label="Phone Number"
+            label="+91 | Enter mobile number"
             value={field.value}
             onChangeText={(value) => field.onChange(value.replace(/\D/g, ""))}
             keyboardType="number-pad"
@@ -79,6 +80,7 @@ export function LoginScreen() {
         )}
       />
       <AppButton title="Send OTP" loading={formState.isSubmitting} onPress={handleSubmit(onSubmit)} />
+      <Text style={styles.securityText}>We will send you a 6 digit OTP on your mobile number</Text>
       <AppButton title="Create Account" variant="ghost" onPress={() => router.push("/register" as never)} />
     </AuthShell>
   );
@@ -181,22 +183,34 @@ export function OtpScreen() {
   }, [normalizedPhone, setValue, handleSubmit, onSubmit]);
 
   return (
-    <AuthShell title="Verify OTP" subtitle={`Enter the code sent to ${phoneNumber || "your phone"}`}>
+    <AuthShell title="Verify OTP" subtitle={`Enter the 6 digit code sent to ${phoneNumber || "your phone"}`} art="otp-landscape">
       <Controller
         control={control}
         name="otp"
         render={({ field, fieldState }) => (
-          <FieldInput
-            label="OTP"
-            value={field.value}
-            onChangeText={(value) => field.onChange(value.replace(/\D/g, ""))}
-            keyboardType="number-pad"
-            maxLength={6}
-            error={fieldState.error?.message}
-          />
+          <>
+            <Pressable onPress={() => undefined} style={styles.otpBoxes}>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <View key={index} style={[styles.otpBox, fieldState.error && styles.otpError]}>
+                  <Text style={styles.otpDigit}>{field.value?.[index] || ""}</Text>
+                </View>
+              ))}
+            </Pressable>
+            <FieldInput
+              label="OTP"
+              value={field.value}
+              onChangeText={(value) => field.onChange(value.replace(/\D/g, ""))}
+              keyboardType="number-pad"
+              maxLength={6}
+              error={fieldState.error?.message}
+              style={styles.hiddenOtpInput}
+            />
+          </>
         )}
       />
-      <AppButton title="Verify OTP" loading={formState.isSubmitting} onPress={handleSubmit(onSubmit)} />
+      <Text style={styles.resend}>Resend OTP in 00:30</Text>
+      <AppButton title="Verify & Continue" loading={formState.isSubmitting} onPress={handleSubmit(onSubmit)} />
+      <Text style={styles.securityText}>Your data is safe with us</Text>
       <AppButton title="Back" variant="ghost" onPress={() => router.back()} />
     </AuthShell>
   );
@@ -206,24 +220,20 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(16, 48, 18, 0.36)",
-  },
   shell: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     padding: 22,
+    paddingTop: 70,
     gap: 18,
   },
   authCard: {
     gap: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
-    borderColor: "rgba(255, 255, 255, 0.78)",
+    backgroundColor: "#FFFFFF",
   },
-  title: {
+  brand: {
     color: palette.primary,
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "900",
     textAlign: "center",
   },
@@ -242,5 +252,47 @@ const styles = StyleSheet.create({
     color: palette.primary,
     fontWeight: "800",
     paddingLeft: 14,
+  },
+  securityText: {
+    color: palette.muted,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  bottomArt: {
+    marginHorizontal: 18,
+    marginBottom: 10,
+  },
+  otpBoxes: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+  },
+  otpBox: {
+    width: 44,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.mint,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  otpError: {
+    borderColor: palette.danger,
+  },
+  otpDigit: {
+    color: palette.text,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  hiddenOtpInput: {
+    opacity: 0.02,
+    height: 1,
+  },
+  resend: {
+    color: palette.primary,
+    textAlign: "center",
+    fontWeight: "800",
   },
 });

@@ -3,10 +3,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
-import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
 import { AppScreen } from "@/components/screen";
+import { Illustration } from "@/components/illustrations";
 import { AppButton, Card, FieldInput, RotatingSquareLoader, SectionHeader } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { predictCrop } from "@/services/api";
@@ -76,14 +77,32 @@ export function CropRecommendationScreen() {
   return (
     <AppScreen withNav>
       <SectionHeader title="Crop Recommendation" caption="Enter soil, weather, and environmental values for the AI crop model." />
-      <ImageBackground source={require("../../assets/images/paddy-register.png")} style={styles.cropHero} imageStyle={styles.cropHeroImage} resizeMode="cover">
-        <View style={styles.cropHeroShade}>
-          <Text style={styles.cropHeroTitle}>Paddy field advisor</Text>
-          <Text style={styles.cropHeroText}>Use local farm readings to find a crop match before saving your field plan.</Text>
-        </View>
-      </ImageBackground>
+      <Card style={styles.heroCard}>
+        <Illustration name="crop-recommendation" height={190} />
+        <Text style={styles.cropHeroTitle}>AI-Powered Crop Recommendations</Text>
+        <Text style={styles.cropHeroText}>Get the best crop suggestions based on your soil, weather & environment.</Text>
+      </Card>
       <Card style={styles.formCard}>
-        {fields.map((field) => (
+        <Text style={styles.groupTitle}>Soil Nutrients</Text>
+        {fields.slice(0, 3).map((field) => (
+          <Controller
+            key={field.key}
+            control={control}
+            name={field.key}
+            render={({ field: controllerField, fieldState }) => (
+              <FieldInput
+                label={`${field.label} (${field.unit})`}
+                value={String(controllerField.value ?? "")}
+                onChangeText={(value) => controllerField.onChange(value === "" ? undefined : value)}
+                placeholder={field.placeholder}
+                keyboardType="decimal-pad"
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+        ))}
+        <Text style={styles.groupTitle}>Environmental Factors</Text>
+        {fields.slice(3).map((field) => (
           <Controller
             key={field.key}
             control={control}
@@ -101,7 +120,7 @@ export function CropRecommendationScreen() {
           />
         ))}
         <AppButton
-          title="Predict Crop"
+          title="Get Recommendation"
           loading={mutation.isPending || formState.isSubmitting}
           onPress={handleSubmit((values) => mutation.mutate(values as RecommendationForm))}
         />
@@ -116,14 +135,21 @@ export function CropRecommendationScreen() {
 
       {submitted && result ? (
         <Card style={styles.resultCard}>
+          <Illustration name="smart-advisory" height={160} />
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Best Match</Text>
+          </View>
           <Text style={styles.resultLabel}>Predicted Crop</Text>
           <Text style={styles.cropName}>{result.recommended_crop}</Text>
           <Info label="Confidence" value={`${Math.round((result.confidence ?? 0.92) * 100)}%`} />
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.round((result.confidence ?? 0.92) * 100)}%` }]} />
+          </View>
           <Info label="Suitable Soil" value={result.suitable_soil || "Loamy, balanced soil"} />
           <Info label="Suitable Temperature" value={result.suitable_temperature || "Model-compatible range"} />
           <Info label="Suitable Rainfall" value={result.suitable_rainfall || "Model-compatible rainfall"} />
           <View style={styles.reasons}>
-            <Text style={styles.infoLabel}>Reasons</Text>
+            <Text style={styles.infoLabel}>Why this crop?</Text>
             {(result.reasons || []).map((reason) => (
               <Text key={reason} style={styles.reasonText}>• {reason}</Text>
             ))}
@@ -148,37 +174,20 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  cropHero: {
-    minHeight: 230,
-    width: "100%",
-    overflow: "hidden",
-    borderRadius: 22,
-  },
-  cropHeroImage: {
-    borderRadius: 22,
-  },
-  cropHeroShade: {
-    flex: 1,
-    justifyContent: "flex-end",
-    padding: 18,
-    backgroundColor: "rgba(10, 43, 17, 0.16)",
+  heroCard: {
+    gap: 8,
+    backgroundColor: palette.mint,
   },
   cropHeroTitle: {
-    color: "#FFFFFF",
+    color: palette.text,
     fontSize: 24,
     fontWeight: "900",
-    textShadowColor: "rgba(0, 0, 0, 0.48)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
   },
   cropHeroText: {
-    color: "#FFFFFF",
+    color: palette.muted,
     marginTop: 6,
     fontWeight: "700",
     lineHeight: 20,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
   },
   formCard: {
     gap: 14,
@@ -195,6 +204,35 @@ const styles = StyleSheet.create({
   },
   resultCard: {
     gap: 13,
+  },
+  groupTitle: {
+    color: palette.text,
+    fontSize: 16,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+  badge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: palette.lightGreen,
+  },
+  badgeText: {
+    color: palette.primary,
+    fontWeight: "900",
+    fontSize: 12,
+  },
+  progressTrack: {
+    height: 10,
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: "#E4EFE1",
+  },
+  progressFill: {
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: palette.primary,
   },
   resultLabel: {
     color: palette.secondary,

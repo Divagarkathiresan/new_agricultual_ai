@@ -1,336 +1,270 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { router } from "expo-router";
-import { Alert, Animated, ImageBackground, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import { CloudSun, Leaf, MapPinned, Sprout, UserRound } from "lucide-react-native";
+import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Bell, CloudSun, Leaf, Menu, MessageCircle, Sprout, Store, TestTube2 } from "lucide-react-native";
 
 import { AppScreen } from "@/components/screen";
-import { AnimatedCard, AppButton, BrandMark, Card, SectionHeader } from "@/components/ui";
+import { Card, SectionHeader } from "@/components/ui";
+import { Illustration } from "@/components/illustrations";
 import { useAppStore } from "@/store/appStore";
 import { palette } from "@/theme/agriculture";
 
 export function HomeScreen() {
   const auth = useAppStore((state) => state.auth);
   const farms = useAppStore((state) => state.farms);
-  const heroOpacity = useMemo(() => new Animated.Value(0), []);
-  const heroTranslate = useMemo(() => new Animated.Value(18), []);
-  const heroScale = useMemo(() => new Animated.Value(1.04), []);
-
-  const showLocationAlert = useCallback((message: string) => {
-    if (Platform.OS === "web") return;
-
-    Alert.alert("Enable Location", message, [
-      { text: "Not Now", style: "cancel" },
-      {
-        text: "Open Settings",
-        onPress: () => {
-          Linking.openSettings().catch(() => undefined);
-        },
-      },
-    ]);
-  }, []);
-
-  const requestHomeLocation = useCallback(() => {
-    if (Platform.OS === "web") return;
-
-    showLocationAlert(
-      "Please enable location access in phone settings so Smart Agriculture AI can personalize your farm dashboard.",
-    );
-  }, [showLocationAlert]);
+  const currentFarm = farms[0];
 
   useEffect(() => {
+    if (Platform.OS === "web") return;
     const timeout = setTimeout(() => {
-      requestHomeLocation();
+      Alert.alert("Enable Location", "Please enable location access so Smart Agriculture AI can personalize your farm dashboard.", [
+        { text: "Not Now", style: "cancel" },
+        { text: "Open Settings", onPress: () => Linking.openSettings().catch(() => undefined) },
+      ]);
     }, 500);
-
     return () => clearTimeout(timeout);
-  }, [requestHomeLocation]);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(heroOpacity, { toValue: 1, duration: 520, useNativeDriver: true }),
-      Animated.spring(heroTranslate, { toValue: 0, damping: 16, stiffness: 100, useNativeDriver: true }),
-      Animated.spring(heroScale, { toValue: 1, damping: 18, stiffness: 80, useNativeDriver: true }),
-    ]).start();
-  }, [heroOpacity, heroScale, heroTranslate]);
+  }, []);
 
   return (
     <AppScreen withNav>
-      <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslate }, { scale: heroScale }] }}>
-        <ImageBackground source={require("../../assets/images/paddy-login.png")} style={styles.hero} imageStyle={styles.heroImage} resizeMode="cover">
-          <View style={styles.heroShade}>
-            <View style={styles.header}>
-              <View style={styles.headerText}>
-                <Text style={styles.greeting}>Hello, {auth.name || "Farmer"}</Text>
-                <Text style={styles.caption}>Your farm dashboard is ready</Text>
-              </View>
-              {/* <BrandMark compact /> */}
-            </View>
-            <View style={styles.heroBottom}>
-              <View>
-                <Text style={styles.heroLabel}>Active fields</Text>
-                <Text style={styles.heroValue}>{farms.length}</Text>
-              </View>
-              <Pressable style={styles.heroAction} onPress={() => router.push("/add-farm" as never)}>
-                <Text style={styles.heroActionText}>Add Farm</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ImageBackground>
-      </Animated.View>
+      <View style={styles.topBar}>
+        <Pressable style={styles.iconButton} accessibilityLabel="Open menu">
+          <Menu size={21} color={palette.text} />
+        </Pressable>
+        <Pressable style={styles.iconButton} accessibilityLabel="Notifications">
+          <Bell size={20} color={palette.text} />
+        </Pressable>
+      </View>
 
-      <AnimatedCard delay={80}>
-        <ImageBackground source={require("../../assets/images/paddy-register.png")} style={styles.weatherCard} imageStyle={styles.weatherImage} resizeMode="cover">
-          <View style={styles.weatherShade}>
-          <View style={styles.weatherTop}>
-            <View>
-              <Text style={styles.weatherLabel}>Today&apos;s Weather</Text>
-              <Text style={styles.weatherTemp}>28 deg C</Text>
+      <View>
+        <Text style={styles.greeting}>Hello, {auth.name || "Ramesh"} 👋</Text>
+        <Text style={styles.caption}>Here&apos;s what&apos;s happening in your farm today.</Text>
+      </View>
+
+      <Card style={styles.weatherCard}>
+        <View style={styles.weatherTop}>
+          <View>
+            <View style={styles.weatherIconRow}>
+              <CloudSun size={28} color="#FFFFFF" />
+              <Text style={styles.temperature}>28°C</Text>
             </View>
-            <CloudSun size={34} color="#FFFFFF" />
+            <Text style={styles.condition}>Partly Cloudy</Text>
           </View>
-          <View style={styles.weatherGrid}>
-            <WeatherItem icon="H" label="Humidity" value="72%" />
-            <WeatherItem icon="R" label="Rainfall" value="18 mm" />
-            <WeatherItem icon="W" label="Wind" value="9 km/h" />
-          </View>
-          </View>
-        </ImageBackground>
-      </AnimatedCard>
+          <Illustration name="otp-landscape" width={104} height={82} />
+        </View>
+        <View style={styles.weatherGrid}>
+          <WeatherItem label="Humidity" value="65%" />
+          <WeatherItem label="Rainfall" value="12 mm" />
+          <WeatherItem label="Wind" value="10 km/h" />
+        </View>
+      </Card>
 
       <SectionHeader title="Quick Actions" />
       <View style={styles.quickGrid}>
-        <QuickAction icon={<Sprout size={21} color={palette.primary} />} title="Add Farm" caption="Create a GPS farm profile" onPress={() => router.push("/add-farm" as never)} />
-        <QuickAction icon={<MapPinned size={21} color={palette.primary} />} title="Farm List" caption={`${farms.length} saved farms`} onPress={() => router.push("/farms" as never)} />
-        <QuickAction icon={<UserRound size={21} color={palette.primary} />} title="Profile" caption="Manage session" onPress={() => router.push("/profile" as never)} />
+        <QuickAction title="Crop Recommendation" icon={<Sprout size={22} color={palette.primary} />} onPress={() => router.push("/predict-crop" as never)} />
+        <QuickAction title="AI Advisory" icon={<MessageCircle size={22} color={palette.primary} />} onPress={() => router.push("/predict-crop" as never)} />
+        <QuickAction title="Farms" icon={<Store size={22} color={palette.primary} />} onPress={() => router.push("/farms" as never)} />
+        <QuickAction title="Farm Details" icon={<Leaf size={22} color={palette.primary} />} onPress={() => router.push("/farms" as never)} />
       </View>
 
-      <SectionHeader title="Your Farm Focus" caption="Use AI recommendations before finalizing crop choices." />
-      <AnimatedCard delay={180}>
-        <Card style={styles.focusCard}>
-          <View style={styles.focusIcon}>
-            <Leaf size={22} color="#FFFFFF" />
-          </View>
-          <View style={styles.focusCopy}>
-            <Text style={styles.focusTitle}>Recommendation-ready workflow</Text>
-            <Text style={styles.focusText}>
-              Start a farm record, suggest a crop from soil and weather metrics, then save the final farm plan.
-            </Text>
-          </View>
+      <SectionHeader title="Farm Overview" />
+      <View style={styles.overviewGrid}>
+        <Card style={styles.overviewCard}>
+          <View style={styles.overviewIcon}><Leaf size={19} color={palette.primary} /></View>
+          <Text style={styles.cardLabel}>Current Crop</Text>
+          <Text style={styles.cardTitle}>{currentFarm?.crop_name || "No crop added"}</Text>
+          <Text style={styles.cardMeta}>Stage: {currentFarm?.planting_date ? "Growing" : "Planning"}</Text>
+          <Text style={styles.cardMeta}>Days remaining: {currentFarm ? "Monitoring" : "--"}</Text>
         </Card>
-      </AnimatedCard>
+        <Card style={styles.overviewCard}>
+          <View style={styles.overviewIcon}><TestTube2 size={19} color={palette.primary} /></View>
+          <Text style={styles.cardLabel}>Soil Health</Text>
+          <Text style={styles.cardTitle}>{currentFarm?.soil_type || "Balanced"}</Text>
+          <StatusBadge label="Good" tone="success" />
+          <Text style={styles.cardMeta}>pH and NPK tracked via recommendations</Text>
+        </Card>
+      </View>
     </AppScreen>
   );
 }
 
-function WeatherItem({ icon, label, value }: { icon: string; label: string; value: string }) {
+function WeatherItem({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.weatherItem}>
-      <Text style={styles.weatherMiniIcon}>{icon}</Text>
       <Text style={styles.weatherValue}>{value}</Text>
-      <Text style={styles.weatherItemLabel}>{label}</Text>
+      <Text style={styles.weatherLabel}>{label}</Text>
     </View>
   );
 }
 
-function QuickAction({ icon, title, caption, onPress }: { icon: React.ReactNode; title: string; caption: string; onPress: () => void }) {
-  const scale = useMemo(() => new Animated.Value(1), []);
-
+function QuickAction({ title, icon, onPress }: { title: string; icon: React.ReactNode; onPress: () => void }) {
   return (
-    <AnimatedCard style={styles.quickCard}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={() => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true }).start()}
-        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
-      >
-        <Animated.View style={[styles.quickInner, { transform: [{ scale }] }]}>
-        <View style={styles.quickIcon}>{icon}</View>
-        <Text style={styles.quickTitle}>{title}</Text>
-        <Text style={styles.quickCaption}>{caption}</Text>
-        <AppButton title="Open" variant="secondary" onPress={onPress} />
-        </Animated.View>
-      </Pressable>
-    </AnimatedCard>
+    <Pressable style={styles.quickCard} onPress={onPress}>
+      <View style={styles.quickIcon}>{icon}</View>
+      <Text style={styles.quickTitle}>{title}</Text>
+    </Pressable>
+  );
+}
+
+function StatusBadge({ label, tone }: { label: string; tone: "success" | "warning" | "danger" }) {
+  const color = tone === "success" ? palette.success : tone === "warning" ? palette.warning : palette.danger;
+  return (
+    <View style={[styles.badge, { backgroundColor: `${color}18` }]}>
+      <View style={[styles.badgeDot, { backgroundColor: color }]} />
+      <Text style={[styles.badgeText, { color }]}>{label}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  topBar: {
     flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: palette.border,
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerText: {
-    flex: 1,
-    paddingRight: 14,
-  },
-  hero: {
-    minHeight: 245,
-    width: "100%",
-    overflow: "hidden",
-    borderRadius: 24,
-  },
-  heroImage: {
-    borderRadius: 24,
-  },
-  heroShade: {
-    flex: 1,
-    justifyContent: "space-between",
-    padding: 18,
-    backgroundColor: "rgba(9, 36, 16, 0.43)",
+    justifyContent: "center",
   },
   greeting: {
-    color: "#FFFFFF",
-    fontSize: 27,
+    color: palette.text,
+    fontSize: 26,
     fontWeight: "900",
   },
   caption: {
-    color: "#E7F4E1",
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  heroBottom: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  heroLabel: {
-    color: "#DBF4D2",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  heroValue: {
-    color: "#FFFFFF",
-    fontSize: 48,
-    fontWeight: "900",
-    lineHeight: 54,
-  },
-  heroAction: {
-    minHeight: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.28)",
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  heroActionText: {
-    color: "#FFFFFF",
-    fontWeight: "900",
+    color: palette.muted,
+    marginTop: 5,
+    fontWeight: "700",
   },
   weatherCard: {
-    minHeight: 190,
-    width: "100%",
-    borderRadius: 22,
-    overflow: "hidden",
-  },
-  weatherImage: {
-    borderRadius: 22,
-  },
-  weatherShade: {
-    flex: 1,
-    padding: 18,
-    backgroundColor: "rgba(21, 86, 35, 0.68)",
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
+    gap: 18,
   },
   weatherTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  weatherLabel: {
-    color: "#DFF3DA",
-    fontSize: 14,
+  weatherIconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  temperature: {
+    color: "#FFFFFF",
+    fontSize: 38,
+    fontWeight: "900",
+  },
+  condition: {
+    color: "#EAF7E8",
+    fontSize: 15,
     fontWeight: "800",
   },
-  weatherTemp: {
-    color: "#FFFFFF",
-    fontSize: 42,
-    fontWeight: "900",
-    marginTop: 4,
-  },
   weatherGrid: {
-    marginTop: 22,
     flexDirection: "row",
     gap: 10,
   },
   weatherItem: {
     flex: 1,
     backgroundColor: "rgba(255,255,255,0.16)",
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 12,
-    gap: 5,
   },
   weatherValue: {
     color: "#FFFFFF",
     fontWeight: "900",
   },
-  weatherMiniIcon: {
-    color: "#FFFFFF",
-    fontWeight: "900",
-    fontSize: 15,
-  },
-  weatherItemLabel: {
+  weatherLabel: {
     color: "#EAF7E8",
     fontSize: 11,
     fontWeight: "700",
+    marginTop: 3,
   },
   quickGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   quickCard: {
-    flex: 1,
-  },
-  quickInner: {
-    backgroundColor: "rgba(255, 255, 255, 0.66)",
-    borderRadius: 18,
+    flexBasis: "47%",
+    flexGrow: 1,
+    minHeight: 118,
+    borderRadius: 24,
+    backgroundColor: palette.lightGreen,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.74)",
-    padding: 16,
-    gap: 10,
+    borderColor: "#DDEEDD",
+    padding: 15,
+    justifyContent: "space-between",
   },
   quickIcon: {
     width: 42,
     height: 42,
-    borderRadius: 14,
-    backgroundColor: "rgba(234, 246, 231, 0.72)",
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   quickTitle: {
     color: palette.text,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "900",
   },
-  quickCaption: {
-    color: palette.muted,
-    fontWeight: "600",
-  },
-  focusCard: {
+  overviewGrid: {
     flexDirection: "row",
-    gap: 14,
+    flexWrap: "wrap",
+    gap: 12,
   },
-  focusIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: palette.primary,
+  overviewCard: {
+    flex: 1,
+    minWidth: 155,
+    gap: 8,
+  },
+  overviewIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 15,
+    backgroundColor: palette.lightGreen,
     alignItems: "center",
     justifyContent: "center",
   },
-  focusCopy: {
-    flex: 1,
+  cardLabel: {
+    color: palette.caption,
+    fontSize: 12,
+    fontWeight: "800",
   },
-  focusTitle: {
+  cardTitle: {
     color: palette.text,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "900",
+    textTransform: "capitalize",
   },
-  focusText: {
+  cardMeta: {
     color: palette.muted,
-    marginTop: 5,
-    lineHeight: 20,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  badge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  badgeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "900",
   },
 });

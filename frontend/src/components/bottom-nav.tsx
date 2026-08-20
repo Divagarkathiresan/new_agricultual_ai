@@ -1,14 +1,15 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, usePathname } from "expo-router";
-import { Home, MapPinned, Sprout, UserRound } from "lucide-react-native";
+import { Home, MessageCircle, Plus, Store, UserRound } from "lucide-react-native";
 
 import { palette, radius, shadow } from "@/theme/agriculture";
 
 const tabs = [
   { label: "Home", path: "/homepage", Icon: Home },
-  { label: "Farms", path: "/farms", Icon: MapPinned },
-  { label: "Recommendation", path: "/predict-crop", Icon: Sprout },
+  { label: "Advisory", path: "/predict-crop", Icon: MessageCircle },
+  { label: "", path: "/add-farm", Icon: Plus, center: true },
+  { label: "Farms", path: "/farms", Icon: Store },
   { label: "Profile", path: "/profile", Icon: UserRound },
 ];
 
@@ -17,9 +18,18 @@ export function BottomNav() {
 
   return (
     <View style={styles.nav}>
-      {tabs.map(({ label, path, Icon }) => {
+      {tabs.map(({ label, path, Icon, center }) => {
         const active = pathname === path || (path === "/farms" && pathname === "/add-farm");
         const iconColor = active ? palette.primary : palette.caption;
+        if (center) {
+          return (
+            <Pressable key={path} style={styles.centerItem} onPress={() => router.replace(path as never)} accessibilityLabel="Add farm">
+              <View style={styles.plusButton}>
+                <Icon size={27} color="#FFFFFF" strokeWidth={2.8} />
+              </View>
+            </Pressable>
+          );
+        }
         return (
           <Pressable key={path} style={styles.item} onPress={() => router.replace(path as never)}>
             <View style={[styles.iconBadge, active && styles.activeIconBadge]}>
@@ -38,12 +48,12 @@ export function BottomNav() {
 const styles = StyleSheet.create({
   nav: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 14,
+    left: 14,
+    right: 14,
+    bottom: 12,
     minHeight: 72,
     borderRadius: radius.xl,
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.78)",
     flexDirection: "row",
@@ -63,6 +73,21 @@ const styles = StyleSheet.create({
     color: palette.caption,
     fontSize: 10,
     fontWeight: "700",
+  },
+  centerItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  plusButton: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: palette.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -28,
+    ...shadow,
   },
   iconBadge: {
     width: 26,
