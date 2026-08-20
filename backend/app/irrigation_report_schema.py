@@ -1,6 +1,7 @@
 """MongoDB document schema for consolidated irrigation reports."""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -59,4 +60,6 @@ class IrrigationReport(BaseModel):
     soil_moisture: SoilMoisture
     water_requirement: WaterRequirement
     recommendation: Recommendation
+    crop_day: Optional[int] = None
+    crop_stage: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -471,7 +471,7 @@ if __name__ == "__main__":
 
     # Bind to localhost and use port 8000 for local development
     host = "127.0.0.1"
-    port = 8000
+    port = 8001
     print(f"🌐 Starting server on http://{host}:{port}")
     print(f"📖 API documentation available at http://{host}:{port}/docs")
     print("ℹ️ Server bound to localhost; accessible only from this machine.")

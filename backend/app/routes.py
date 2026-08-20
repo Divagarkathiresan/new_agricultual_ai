@@ -5,6 +5,7 @@ import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from datetime import date, datetime
+from typing import Optional
 
 try:
     from .model_loader import model, encoder
@@ -12,7 +13,7 @@ try:
     from .farm_schema import Farm
     from .irrigation_report_schema import IrrigationReport
     from .auth import CurrentUser, create_access_token, get_current_user
-    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, save_irrigation_report
+    from .database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, get_irrigation_reports_by_farm, save_irrigation_report
     from .database import connection
     from irrigation.irrigation_service import IrrigationService
 except ImportError:
@@ -21,11 +22,83 @@ except ImportError:
     from farm_schema import Farm
     from irrigation_report_schema import IrrigationReport
     from auth import CurrentUser, create_access_token, get_current_user
-    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, save_irrigation_report
+    from database.models import save_prediction, register_user, store_otp, verify_otp, create_farm, get_farm_by_id, get_farms_by_user, get_irrigation_report_by_date, get_irrigation_reports_by_farm, save_irrigation_report
     from database import connection
     from irrigation.irrigation_service import IrrigationService
 
 router = APIRouter()
+
+CROP_REMAP = {
+    "rice": "pepper",
+    "maize": "potato",
+    "pomegranate": "tomato",
+}
+
+
+def remap_recommended_crop(crop_name: Optional[str]) -> Optional[str]:
+    if crop_name is None:
+        return None
+    normalized = str(crop_name).strip().lower()
+    return CROP_REMAP.get(normalized, crop_name)
+
+# Crop lifecycle definitions used to determine the current crop stage from crop_day
+CROP_LIFECYCLE = {
+    "tomato": {
+        "total_days": 120,
+        "stages": [
+            {"name": "Establishment", "start": 0, "end": 14},
+            {"name": "Vegetative Growth", "start": 15, "end": 35},
+            {"name": "Flowering", "start": 36, "end": 55},
+            {"name": "Fruit Development", "start": 56, "end": 80},
+            {"name": "Fruit Ripening", "start": 81, "end": 105},
+            {"name": "Harvest", "start": 106, "end": 120}
+        ]
+    },
+    "potato": {
+        "total_days": 120,
+        "stages": [
+            {"name": "Sprouting / Emergence", "start": 0, "end": 20},
+            {"name": "Vegetative Growth", "start": 21, "end": 40},
+            {"name": "Tuber Initiation", "start": 41, "end": 60},
+            {"name": "Tuber Bulking", "start": 61, "end": 90},
+            {"name": "Maturation", "start": 91, "end": 110},
+            {"name": "Harvest", "start": 111, "end": 120}
+        ]
+    },
+    "pepper": {
+        "total_days": 120,
+        "stages": [
+            {"name": "Establishment", "start": 0, "end": 15},
+            {"name": "Vegetative Growth", "start": 16, "end": 40},
+            {"name": "Flowering", "start": 41, "end": 60},
+            {"name": "Fruit Development", "start": 61, "end": 85},
+            {"name": "Fruit Maturation", "start": 86, "end": 110},
+            {"name": "Harvest", "start": 111, "end": 120}
+        ]
+    }
+}
+
+
+def compute_crop_stage(crop_name: Optional[str], crop_day: Optional[int]) -> Optional[str]:
+    """Return the stage name for a crop given its crop_day using CROP_LIFECYCLE.
+
+    Returns None if no appropriate stage can be determined.
+    """
+    if crop_day is None or not crop_name:
+        return None
+
+    name_lower = crop_name.lower()
+    for key, lifecycle in CROP_LIFECYCLE.items():
+        if key in name_lower:
+            stages = lifecycle.get("stages", [])
+            for s in stages:
+                if s.get("start") <= crop_day <= s.get("end"):
+                    return s.get("name")
+            # If beyond defined total_days
+            if crop_day > lifecycle.get("total_days", 0):
+                return "Post-harvest"
+            return None
+    return None
 
 
 @router.get("/farm/{farm_id}/irrigation/report", response_model=IrrigationReport)
@@ -47,7 +120,28 @@ def get_irrigation_report(
             detail=f"No irrigation report found for date {report_date.isoformat()}",
         )
 
+    # Calculate crop day from planting_date if available
+    planting = farm.get("planting_date")
+    crop_day = None
+    if planting:
+        try:
+            if isinstance(planting, str):
+                planting_dt = datetime.fromisoformat(planting)
+            else:
+                planting_dt = planting
+            planting_date_only = planting_dt.date()
+            days = (report_date - planting_date_only).days + 1
+            crop_day = max(1, days)
+        except Exception:
+            crop_day = None
+
     report.pop("_id", None)
+    if crop_day is not None:
+        report["crop_day"] = crop_day
+        # compute crop stage using farm crop_name
+        crop_stage = compute_crop_stage(farm.get("crop_name"), crop_day)
+        if crop_stage is not None:
+            report["crop_stage"] = crop_stage
     return report
 
 
@@ -75,10 +169,35 @@ def get_irrigation_plan(
         )
 
     report_date_value = report_date.isoformat()
+
+    # Pre-calc crop_day from planting_date if available
+    crop_day: Optional[int] = None
+    planting = farm.get("planting_date")
+    if planting:
+        try:
+            if isinstance(planting, str):
+                planting_dt = datetime.fromisoformat(planting)
+            else:
+                planting_dt = planting
+            planting_date_only = planting_dt.date()
+            days = (report_date - planting_date_only).days + 1
+            crop_day = max(1, days)
+        except Exception:
+            crop_day = None
     saved_report = get_irrigation_report_by_date(farm_id, report_date_value)
     if saved_report:
         saved_report.pop("_id", None)
-        return saved_report
+        # populate crop_day if missing
+        if crop_day is not None and not saved_report.get("crop_day"):
+            saved_report["crop_day"] = crop_day
+            # populate crop_stage when we have crop_day
+            try:
+                crop_stage_val = compute_crop_stage(farm.get("crop_name"), crop_day)
+                if crop_stage_val:
+                    saved_report["crop_stage"] = crop_stage_val
+            except Exception:
+                pass
+        return saved_report 
 
     # No report exists for this date, so generate the irrigation and NDVI analysis once.
     result = IrrigationService.generate_irrigation_plan(farm_id)
@@ -93,6 +212,8 @@ def get_irrigation_plan(
                     "crop_name": farm.get("crop_name", ""),
                     "location": farm.get("location", {}),
                     "weather": result.get("weather"),
+                        "crop_day": crop_day,
+                        "crop_stage": compute_crop_stage(farm.get("crop_name", ""), crop_day),
                     "satellite": {
                         "average_ndvi": None,
                         "health_score": None,
@@ -124,6 +245,9 @@ def get_irrigation_plan(
             detail=result["message"]
         )
 
+    # determine crop stage for generated report
+    crop_stage = compute_crop_stage(result.get("crop_name") or farm.get("crop_name"), crop_day)
+
     report = IrrigationReport(
         farm_id=farm_id,
         report_date=report_date_value,
@@ -134,6 +258,8 @@ def get_irrigation_plan(
         soil_moisture=result["soil_moisture"],
         water_requirement=result["water_requirement"],
         recommendation=result["recommendation"],
+        crop_day=crop_day,
+        crop_stage=crop_stage,
     )
     save_irrigation_report(report.model_dump())
     return report
@@ -168,10 +294,34 @@ def create_irrigation_report(
             "report_id": existing_report["_id"],
         }
 
-    result = save_irrigation_report(report.model_dump())
+    # inject crop_day into saved document when possible
+    report_dict = report.model_dump()
+    planting = farm.get("planting_date")
+    if planting:
+        try:
+            if isinstance(planting, str):
+                planting_dt = datetime.fromisoformat(planting)
+            else:
+                planting_dt = planting
+            planting_date_only = planting_dt.date()
+            report_date_obj = date.fromisoformat(report.report_date)
+            days = (report_date_obj - planting_date_only).days + 1
+            report_dict["crop_day"] = max(1, days)
+        except Exception:
+            pass
+    # compute crop_stage before saving
+    try:
+        crop_name_for_report = report_dict.get("crop_name") or farm.get("crop_name")
+        report_dict["crop_stage"] = compute_crop_stage(crop_name_for_report, report_dict.get("crop_day"))
+    except Exception:
+        pass
+
+    result = save_irrigation_report(report_dict)
     return {
         "message": "Irrigation report created successfully",
         "report_id": str(result.inserted_id),
+        "crop_day": report_dict.get("crop_day"),
+        "crop_stage": report_dict.get("crop_stage"),
     }
 
 @router.post("/predict")
@@ -189,6 +339,7 @@ def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_curren
 
     prediction = model.predict(sample)
     crop = encoder.inverse_transform(prediction)
+    recommended_crop = remap_recommended_crop(crop[0])
 
     prediction_data = {
         "user_id": current_user.user_id,
@@ -200,12 +351,12 @@ def predict_crop(data: CropInput, current_user: CurrentUser = Depends(get_curren
         "humidity": data.humidity,
         "ph": data.ph,
         "rainfall": data.rainfall,
-        "recommended_crop": crop[0]
+        "recommended_crop": recommended_crop
     }
 
     save_prediction(prediction_data)
 
-    return {"recommended_crop": crop[0]}
+    return {"recommended_crop": recommended_crop}
 
 
 @router.post("/register")
@@ -273,6 +424,21 @@ def check_otp(data: VerifyOTPRequest):
         "access_token": create_access_token(user_id),
         "token_type": "bearer",
     }
+
+
+@router.get("/farm/{farm_id}/irrigation/reports")
+def get_farm_irrigation_reports(
+    farm_id: str,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    farm = get_farm_by_id(farm_id)
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    if farm.get("user_id") != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You do not have access to this farm")
+
+    reports = get_irrigation_reports_by_farm(farm_id)
+    return {"reports": reports}
 
 
 @router.get("/farms")

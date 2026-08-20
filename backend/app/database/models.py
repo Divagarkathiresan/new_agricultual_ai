@@ -46,6 +46,13 @@ def save_satellite_report(data: dict):
 def save_irrigation_report(data: dict):
     return connection.irrigation_reports_collection.insert_one(data)
 
+def get_irrigation_reports_by_farm(farm_id: str):
+    reports = list(connection.irrigation_reports_collection.find({"farm_id": farm_id}))
+    for report in reports:
+        report["_id"] = str(report["_id"])
+    reports.sort(key=lambda report: (report.get("crop_day") is None, report.get("crop_day") if report.get("crop_day") is not None else 0))
+    return reports
+
 def get_irrigation_report_by_date(farm_id: str, date: str):
     report = connection.irrigation_reports_collection.find_one({
         "farm_id": farm_id,
