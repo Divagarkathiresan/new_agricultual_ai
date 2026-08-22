@@ -6,7 +6,7 @@ npx expo start
 npx expo start --dev-client --lan --clear
 
 
-
+# Use this command alone
 cd /Users/sanjana/Desktop/Projects/Smart-Agriculture-Advisory-using-AI-main/frontend
 nvm use 20
 export ANDROID_HOME="$HOME/Library/Android/sdk"
